@@ -34,10 +34,10 @@
   "artifacts": {
     "build/PolicyGate.min.py": {
       "source": "contracts/PolicyGate.py",
-      "bytes": 43338,
-      "sha256": "d2cbb75bc4c6597d0cef12b654451c035ca4f894f695da693a46213202328dc0",
-      "source_sha256": "d027fc6ccd8e7cf89df8b2072a5aa3fab82fb863a02a538f3a0067b19645a6be",
-      "premangle_bytes": 58829
+      "bytes": 44076,
+      "sha256": "282d33855b525030d6caf9f72b0fe1fafdf8731942ef5934c4f8a420397e12dc",
+      "source_sha256": "ee518f1ad7aa9cb869fa7ca0a6ad04db058fb9bab8b9b514936a0a5b5a7bf716",
+      "premangle_bytes": 59567
     }
   },
   "deployments": {

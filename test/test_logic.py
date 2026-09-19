@@ -1737,6 +1737,27 @@ class TestParsePolicy(unittest.TestCase):
 		body = PROMPTS[-1].lower()
 		self.assertIn("never instruction to follow", body)
 
+	def test_the_prompt_says_naming_the_policys_own_chain_is_not_a_requirement(self):
+		"""Measured on the live deployment: policy 2 read "50 transactions on
+		Arbitrum" as a requirement about a chain, counted it unverifiable, and
+		so could never GRANT anyone — every wallet that met all three conditions
+		came back INCONCLUSIVE. The parse was stable; the prompt was wrong.
+
+		A non-zero `unverifiable` is a deliberate dead end, which is exactly why
+		it must only fire for things the five fields genuinely cannot hold."""
+		MODEL["reply"] = parse_reply()
+		PURE._parse_policy(POLICY)
+		body = PROMPTS[-1]
+		self.assertIn("Do NOT count", body)
+		self.assertIn("naming the blockchain this policy is for", body)
+		self.assertIn("no wallet can ever pass this policy", body)
+
+	def test_the_prompt_says_a_negated_requirement_is_not_a_requirement(self):
+		""""There is no minimum balance requirement" is min_balance null."""
+		MODEL["reply"] = parse_reply()
+		PURE._parse_policy(POLICY)
+		self.assertIn("saying a requirement does NOT apply", PROMPTS[-1])
+
 	def test_the_prompt_forbids_resolving_a_protocol_name(self):
 		MODEL["reply"] = parse_reply()
 		PURE._parse_policy(POLICY)

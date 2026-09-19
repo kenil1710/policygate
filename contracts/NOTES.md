@@ -278,6 +278,42 @@ worst failure an access gate has, and it is one line of code away at all times.
 A test enumerates every combination of PASS and UNKNOWN across three conditions
 and asserts no combination containing an UNKNOWN is ever GRANTED.
 
+### 5a. An over-eager `unverifiable` is its own failure mode
+
+Found on the live deployment, not in a test, and worth stating plainly because
+it is the mirror image of the thing `unverifiable` exists to prevent.
+
+Policy 2 of the seed reads: *"Access requires a wallet at least 90 days old that
+has made at least 50 transactions **on Arbitrum**, with no more than 20 percent
+of its recent transactions having failed. **There is no minimum balance
+requirement for this gate.**"*
+
+Five validators parsed it identically every time — `parse_runs 3, parse_changes
+0` — into exactly the three conditions it states. And they also returned
+`unverifiable: 1`, every time. So a wallet that met all three conditions came
+back **INCONCLUSIVE**, and the policy could never grant anyone. The parse was
+stable; the prompt was wrong.
+
+The model was counting the policy naming its own chain — or its own statement
+that a balance is *not* required — as a requirement the five fields could not
+hold. Neither is a requirement at all: the policy is already bound to one chain
+and every condition is evaluated on it, and "no minimum balance" is
+`min_balance: null`.
+
+The fix is in the prompt, not the contract. Clause 5 of `_verdict_of` is right
+and stays: a requirement this gate cannot check must block a grant. But that
+makes a non-zero `unverifiable` a **deliberate dead end**, and a dead end must
+only ever be reached for the real reason. The prompt now names the three things
+that are *not* extra requirements, and says in its own voice that a non-zero
+count means no wallet can ever pass.
+
+The lesson generalises past this contract: a conservative default is only as
+good as the thing that triggers it. "Refuse when unsure" plus "unsure too often"
+is indistinguishable from "always refuse", and it fails silently, because every
+individual answer looks careful.
+
+---
+
 Clause 5 is what `unverifiable` is for. A policy that says "…and the holder must
 have passed the foundation's off-chain identity verification" states a real
 requirement that no on-chain condition expresses. The parser counts it; the
