@@ -250,6 +250,67 @@ anyone can resolve it later; one that stays stuck past the window can be closed
 by anyone as INCONCLUSIVE. That path is not an edge case here — it is the normal
 way a busy gate makes progress.
 
+## What it did on studio-dev
+
+Five policies, four chains, fifteen wallets checked — every one a real address
+with a real history, every verdict decided on numbers five validators fetched
+separately. Full records, including each policy's exact parse and each check's
+agreed vector, are in `deployments.json`.
+
+```
+id  pol chain     wallet       verdict       met    buckets        unverifiable
+ 0  p3  polygon   0x28c6c062   GRANTED       4/4    age6 tx3 bal6  0
+ 1  p2  arbitrum  0x28c6c062   DENIED        2/3    age7 tx3 bal4  0
+ 2  p2  arbitrum  0x33015b74   DENIED        1/3    age1 tx1 bal1  0
+ 3  p3  polygon   0xd8da6bf2   GRANTED       4/4    age7 tx6 bal7  0
+ 4  p2  arbitrum  0xd8da6bf2   GRANTED       3/3    age7 tx7 bal4  0
+ 5  p1  base      0xd8da6bf2   GRANTED       4/4    age7 tx4 bal5  0
+ 6  p1  base      0x28c6c062   GRANTED       4/4    age7 tx4 bal2  0
+ 7  p3  polygon   0x1f98431c   DENIED        2/4    age7 tx4 bal1  0
+ 8  p2  arbitrum  0x1f98431c   DENIED        2/3    age7 tx5 bal1  0
+ 9  p1  base      0x42000000   GRANTED       4/4    age7 tx5 bal7  0
+10  p0  ethereum  0xd8da6bf2   GRANTED       4/4    age7 tx7 bal5  0
+11  p0  ethereum  0x33015b74   DENIED        1/4    age1 tx1 bal1  0
+12  p0  ethereum  0x28c6c062   GRANTED       4/4    age7 tx6 bal7  0
+13  p4  ethereum  0xd8da6bf2   INCONCLUSIVE  3/3    age7 tx7 bal5  2
+14  p4  ethereum  0x33015b74   DENIED        0/3    age1 tx1 bal1  2
+```
+
+**Checks 13 and 14 are the pair worth reading.** Same policy — the one carrying
+a genuine off-chain clause ("must also have passed the foundation's identity
+verification… and be a resident of a jurisdiction where governance participation
+is permitted"), which both rounds counted as exactly **2** unverifiable
+requirements. vitalik.eth meets all three on-chain conditions, so the gate
+**declines to decide**. The wallet with no history provably fails all three, so
+it is **denied outright**. A proven failure outranks an unprovable requirement;
+an unprovable requirement outranks a clean sweep. That ordering is the whole of
+`_verdict_of`, and this is it running on real data.
+
+**Every policy parsed identically on every run** — `parse_changes = 0` across
+all 15 rounds — which is what the snapping ladders exist for. Their exact
+readings:
+
+```
+Ethereum Veteran       wallet_age_days=365; min_tx_count=100;
+                       min_balance=10000000000000000; max_failed_tx_pct=25
+Arbitrum Active Trader wallet_age_days=90;  min_tx_count=50; max_failed_tx_pct=20
+Polygon Holder         wallet_age_days=30;  min_tx_count=5;
+                       min_balance=1000000000000000000; max_failed_tx_pct=40
+Strict Council Seat    wallet_age_days=730; min_tx_count=500;
+                       min_balance=50000000000000000
+```
+
+"one year" became 365, "two years" 730, "0.01 ETH" the right number of wei, and
+"there is no minimum balance requirement for this gate" correctly became no
+balance condition at all rather than an unverifiable one.
+
+**49 retries across 15 checks**, and every one of them is the same story: a busy
+wallet needs the v1 first-transaction call, and that quota is scarce
+([§4](docs/PROBE.md)). All 15 settled in the end. How they were drained is
+itself a finding — see `test/resolve_pending.mjs`: retrying the whole backlog on
+a short loop spends more quota than it recovers, and resolving three at a time
+with long gaps drained everything that hammering could not.
+
 ## Deployment
 
 `deployments.json` carries the current address, the artifact checksum, every
