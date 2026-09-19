@@ -144,7 +144,26 @@ MAX_POLICY_CHARS = 1000
 MAX_NAME_CHARS = 100
 MAX_DESCRIPTION_CHARS = 300
 MAX_REASONING_CHARS = 600
-MAX_CONDITIONS_JSON = 1400
+MAX_DETAIL_CHARS = 160
+
+# The per-condition breakdown, as stored JSON.
+#
+# TRUNCATING JSON DOES NOT SHORTEN IT, IT DESTROYS IT. A fragment cut at a byte
+# boundary does not parse, `get_check` would answer with an empty condition list
+# for a check that has one, and `verify_check` would recompute from nothing and
+# report an honest check as unverified. So the cap is not a hope - the rows are
+# bounded by construction so the total cannot reach it:
+#
+#   at most 5 conditions (one per kind), each at most
+#     ~90 bytes of keys and fixed values
+#   + MAX_DETAIL_CHARS of detail
+#   + 3 addresses of `missing` at 44 bytes
+#   = ~380 bytes, so 5 rows is under 1,950.
+#
+# A test builds the widest possible breakdown and asserts what is stored still
+# parses.
+MAX_CONDITIONS_JSON = 2600
+MAX_MISSING_SHOWN = 3
 MAX_FACTS_JSON = 700
 MAX_LIST_PAGE = 100
 SCAN_CAP = 500
@@ -927,11 +946,20 @@ def _fetch_facts(chain: str, wallet: str, now: int) -> dict:
 	tx_count = 0
 	tx_known = False
 	tx_exact = False
-	if counters_n >= 0 and counters_n >= visible:
+	if not sample_ok:
+		# A COUNTER THAT COULD NOT BE CROSS-EXAMINED IS NOT EVIDENCE.
+		#
+		# Without a list beside it there is no way to tell a correct counter
+		# from the broken one Base serves, and trusting it here would produce
+		# the single failure this whole rule exists to prevent: a confident
+		# `0 transactions, DENIED` about a wallet with hundreds. Unknown is the
+		# safe answer and costs only an INCONCLUSIVE.
+		tx_known = False
+	elif counters_n >= 0 and counters_n >= visible:
 		tx_count = counters_n
 		tx_known = True
 		tx_exact = True
-	elif sample_ok:
+	else:
 		tx_count = visible
 		tx_known = True
 		# Not full means we saw everything, so the count is exact whatever the
@@ -1162,6 +1190,21 @@ def _conditions_text(conditions) -> str:
 # ═══════════════════════════════════════════════════════════════════════════
 
 
+def _row(kind: str, required: int, actual: int, status: str, detail: str,
+		missing=None) -> dict:
+	"""One result row, bounded by construction.
+
+	Every row goes through here so no condition can produce an unbounded one -
+	see MAX_CONDITIONS_JSON for why a bound that is merely usually respected is
+	worse than no bound at all.
+	"""
+	out = {"kind": kind, "required": int(required), "actual": int(actual),
+		"status": status, "detail": " ".join(str(detail).split())[:MAX_DETAIL_CHARS]}
+	if missing:
+		out["missing"] = list(missing)[:MAX_MISSING_SHOWN]
+	return out
+
+
 def _evaluate(conditions, facts, chain: str) -> list:
 	"""One result row per condition: PASS, FAIL or UNKNOWN, with the numbers.
 
@@ -1188,21 +1231,19 @@ def _evaluate(conditions, facts, chain: str) -> list:
 
 		if kind == K_AGE:
 			if not facts["age_known"]:
-				rows.append({"kind": kind, "required": want, "actual": -1,
-					"status": R_UNKNOWN,
-					"detail": "The first transaction could not be read."})
+				rows.append(_row(kind, want, -1, R_UNKNOWN,
+					"The first transaction could not be read."))
 			else:
 				got = int(facts["age_days"])
-				rows.append({"kind": kind, "required": want, "actual": got,
-					"status": R_PASS if got >= want else R_FAIL,
-					"detail": ("first transaction " + str(got) + " days ago; "
-						+ str(want) + " required")})
+				rows.append(_row(kind, want, got,
+					R_PASS if got >= want else R_FAIL,
+					"first transaction " + str(got) + " days ago; "
+					+ str(want) + " required"))
 
 		elif kind == K_TX:
 			if not facts["tx_count_known"]:
-				rows.append({"kind": kind, "required": want, "actual": -1,
-					"status": R_UNKNOWN,
-					"detail": "The transaction count could not be read."})
+				rows.append(_row(kind, want, -1, R_UNKNOWN,
+					"The transaction count could not be read."))
 			else:
 				got = int(facts["tx_count"])
 				if got >= want:
@@ -1216,20 +1257,18 @@ def _evaluate(conditions, facts, chain: str) -> list:
 					detail = ("the explorer's counter is not usable for this "
 						"wallet; at least " + str(got) + " transactions are "
 						"visible but " + str(want) + " is not provable")
-				rows.append({"kind": kind, "required": want, "actual": got,
-					"status": status, "detail": detail})
+				rows.append(_row(kind, want, got, status, detail))
 
 		elif kind == K_BAL:
 			if not facts["balance_known"]:
-				rows.append({"kind": kind, "required": want, "actual": -1,
-					"status": R_UNKNOWN,
-					"detail": "The balance could not be read."})
+				rows.append(_row(kind, want, -1, R_UNKNOWN,
+					"The balance could not be read."))
 			else:
 				got = int(facts["balance_wei"])
-				rows.append({"kind": kind, "required": want, "actual": got,
-					"status": R_PASS if got >= want else R_FAIL,
-					"detail": ("holds " + _wei_text(got) + " " + coin + "; "
-						+ _wei_text(want) + " required")})
+				rows.append(_row(kind, want, got,
+					R_PASS if got >= want else R_FAIL,
+					"holds " + _wei_text(got) + " " + coin + "; "
+					+ _wei_text(want) + " required"))
 
 		elif kind == K_INTERACT:
 			wanted = cond.get("addresses", [])
@@ -1239,34 +1278,30 @@ def _evaluate(conditions, facts, chain: str) -> list:
 				if addr not in seen:
 					missing.append(addr)
 			if not missing:
-				rows.append({"kind": kind, "required": len(wanted),
-					"actual": len(wanted), "status": R_PASS,
-					"detail": ("all " + str(len(wanted)) + " required "
-						"counterparties appear in the sampled history")})
+				rows.append(_row(kind, len(wanted), len(wanted), R_PASS,
+					"all " + str(len(wanted)) + " required counterparties "
+					"appear in the sampled history"))
 			elif facts["parties_complete"]:
-				rows.append({"kind": kind, "required": len(wanted),
-					"actual": len(wanted) - len(missing), "status": R_FAIL,
-					"detail": ("never interacted with " + ", ".join(missing[:3])),
-					"missing": missing})
+				rows.append(_row(kind, len(wanted), len(wanted) - len(missing),
+					R_FAIL, "never interacted with "
+					+ ", ".join(missing[:MAX_MISSING_SHOWN]), missing))
 			else:
-				rows.append({"kind": kind, "required": len(wanted),
-					"actual": len(wanted) - len(missing), "status": R_UNKNOWN,
-					"detail": ("not in the most recent " + str(facts["sample_n"])
-						+ " transactions, and the history is longer than the "
-						"sample - absence is not provable"),
-					"missing": missing})
+				rows.append(_row(kind, len(wanted), len(wanted) - len(missing),
+					R_UNKNOWN, "not in the most recent "
+					+ str(facts["sample_n"]) + " transactions, and the history "
+					"is longer than the sample - absence is not provable",
+					missing))
 
 		elif kind == K_FAILPCT:
 			if not facts["failed_known"]:
-				rows.append({"kind": kind, "required": want, "actual": -1,
-					"status": R_UNKNOWN,
-					"detail": "The recent transactions could not be read."})
+				rows.append(_row(kind, want, -1, R_UNKNOWN,
+					"The recent transactions could not be read."))
 			else:
 				got = int(facts["failed_pct"])
-				rows.append({"kind": kind, "required": want, "actual": got,
-					"status": R_PASS if got <= want else R_FAIL,
-					"detail": (str(got) + "% of the last " + str(facts["sample_n"])
-						+ " transactions failed; " + str(want) + "% allowed")})
+				rows.append(_row(kind, want, got,
+					R_PASS if got <= want else R_FAIL,
+					str(got) + "% of the last " + str(facts["sample_n"])
+					+ " transactions failed; " + str(want) + "% allowed"))
 	return rows
 
 
@@ -1676,6 +1711,20 @@ class PolicyGate(gl.contract.Contract):
 	def _now(self) -> int:
 		return _epoch_from_iso(gl.message.raw.get("datetime", ""))
 
+	def _id(self, raw) -> int:
+		"""A u32 id, or -1 if it is not one.
+
+		CLAMPING IS WRONG HERE AND IT IS NOT A COSMETIC DIFFERENCE. A clamp maps
+		-1, "abc" and every out-of-range value onto id 0, so `is_granted(wallet,
+		-1)` would answer with POLICY ZERO'S grant - a composing contract with a
+		typo in its policy id would gate on a policy it never named, and be told
+		true. An id that is not an id has no policy and no check.
+		"""
+		value = _as_int(raw, -1)
+		if value < 0 or value > 4294967295:
+			return -1
+		return value
+
 	def _policy(self, policy_id: int):
 		"""The policy, or None. NEVER raises - rule 1.
 
@@ -1683,10 +1732,16 @@ class PolicyGate(gl.contract.Contract):
 		id is a successful transaction that explains itself rather than a revert
 		whose reason the caller may not even be able to read back.
 		"""
-		return self.policies.get(u32(_clamp(_as_int(policy_id, -1), 0, 4294967295)))
+		found = self._id(policy_id)
+		if found < 0:
+			return None
+		return self.policies.get(u32(found))
 
 	def _check_row(self, check_id: int):
-		return self.checks.get(u32(_clamp(_as_int(check_id, -1), 0, 4294967295)))
+		found = self._id(check_id)
+		if found < 0:
+			return None
+		return self.checks.get(u32(found))
 
 	def _pair_key(self, policy_id: int, wallet: str) -> str:
 		return str(int(policy_id)) + ":" + wallet
@@ -2066,6 +2121,16 @@ class PolicyGate(gl.contract.Contract):
 		check.status = C_SETTLED
 		check.verdict = verdict
 		check.settled_at = u64(now)
+		# RE-STAMPED, because `_resolve` reads the policy text LIVE and a policy
+		# can be rewritten between a check being filed and being answered - which
+		# is routine here, since a rate-limited check can sit PENDING for a long
+		# time (docs/PROBE.md §4). The check must record the wording it was
+		# ACTUALLY decided against, not the one it was asked about: otherwise
+		# verify_check recomputes the content hash from a text the round never
+		# saw and calls an honest check forged, and `_stale` would call a check
+		# decided a moment ago under the current wording out of date.
+		check.policy_version = u32(int(policy.version))
+		check.policy_hash = _content_hash(str(policy.policy_text))
 		check.conditions_met = u32(_clamp(_as_int(result.get("conditions_met"), 0), 0, 64))
 		check.conditions_total = u32(_clamp(_as_int(result.get("conditions_total"), 0), 0, 64))
 		check.unverifiable = u32(_clamp(_as_int(result.get("unverifiable"), 0), 0, MAX_UNVERIFIABLE))

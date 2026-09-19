@@ -38,7 +38,9 @@ MAX_POLICY_CHARS=1000
 MAX_NAME_CHARS=100
 MAX_DESCRIPTION_CHARS=300
 MAX_REASONING_CHARS=600
-MAX_CONDITIONS_JSON=1400
+MAX_DETAIL_CHARS=160
+MAX_CONDITIONS_JSON=2600
+MAX_MISSING_SHOWN=3
 MAX_FACTS_JSON=700
 MAX_LIST_PAGE=100
 SCAN_CAP=500
@@ -459,11 +461,13 @@ def _fetch_facts(chain:str,wallet:str,now:int)->dict:
  tx_count=0
  tx_known=False
  tx_exact=False
- if counters_n>=0 and counters_n>=visible:
+ if not sample_ok:
+  tx_known=False
+ elif counters_n>=0 and counters_n>=visible:
   tx_count=counters_n
   tx_known=True
   tx_exact=True
- elif sample_ok:
+ else:
   tx_count=visible
   tx_known=True
   tx_exact=not has_more
@@ -602,6 +606,13 @@ def _conditions_text(conditions)->str:
   else:
    parts.append(kind+"="+str(int(cond.get("value",0))))
  return";".join(parts)
+def _row(kind:str,required:int,actual:int,status:str,detail:str,
+missing=None)->dict:
+ out={"kind":kind,"required":int(required),"actual":int(actual),
+ "status":status,"detail":" ".join(str(detail).split())[:MAX_DETAIL_CHARS]}
+ if missing:
+  out["missing"]=list(missing)[:MAX_MISSING_SHOWN]
+ return out
 def _evaluate(conditions,facts,chain:str)->list:
  coin=CHAIN_COIN.get(chain,"ETH")
  rows=[]
@@ -610,20 +621,18 @@ def _evaluate(conditions,facts,chain:str)->list:
   want=int(cond.get("value",0))
   if kind==K_AGE:
    if not facts["age_known"]:
-    rows.append({"kind":kind,"required":want,"actual":-1,
-    "status":R_UNKNOWN,
-    "detail":"The first transaction could not be read."})
+    rows.append(_row(kind,want,-1,R_UNKNOWN,
+    "The first transaction could not be read."))
    else:
     got=int(facts["age_days"])
-    rows.append({"kind":kind,"required":want,"actual":got,
-    "status":R_PASS if got>=want else R_FAIL,
-    "detail":("first transaction "+str(got)+" days ago; "
-    +str(want)+" required")})
+    rows.append(_row(kind,want,got,
+    R_PASS if got>=want else R_FAIL,
+    "first transaction "+str(got)+" days ago; "
+    +str(want)+" required"))
   elif kind==K_TX:
    if not facts["tx_count_known"]:
-    rows.append({"kind":kind,"required":want,"actual":-1,
-    "status":R_UNKNOWN,
-    "detail":"The transaction count could not be read."})
+    rows.append(_row(kind,want,-1,R_UNKNOWN,
+    "The transaction count could not be read."))
    else:
     got=int(facts["tx_count"])
     if got>=want:
@@ -637,19 +646,17 @@ def _evaluate(conditions,facts,chain:str)->list:
      detail=("the explorer's counter is not usable for this "
       "wallet; at least "+str(got)+" transactions are "
       "visible but "+str(want)+" is not provable")
-    rows.append({"kind":kind,"required":want,"actual":got,
-    "status":status,"detail":detail})
+    rows.append(_row(kind,want,got,status,detail))
   elif kind==K_BAL:
    if not facts["balance_known"]:
-    rows.append({"kind":kind,"required":want,"actual":-1,
-    "status":R_UNKNOWN,
-    "detail":"The balance could not be read."})
+    rows.append(_row(kind,want,-1,R_UNKNOWN,
+    "The balance could not be read."))
    else:
     got=int(facts["balance_wei"])
-    rows.append({"kind":kind,"required":want,"actual":got,
-    "status":R_PASS if got>=want else R_FAIL,
-    "detail":("holds "+_wei_text(got)+" "+coin+"; "
-    +_wei_text(want)+" required")})
+    rows.append(_row(kind,want,got,
+    R_PASS if got>=want else R_FAIL,
+    "holds "+_wei_text(got)+" "+coin+"; "
+    +_wei_text(want)+" required"))
   elif kind==K_INTERACT:
    wanted=cond.get("addresses",[])
    seen=facts["parties"]
@@ -658,33 +665,29 @@ def _evaluate(conditions,facts,chain:str)->list:
     if addr not in seen:
      missing.append(addr)
    if not missing:
-    rows.append({"kind":kind,"required":len(wanted),
-    "actual":len(wanted),"status":R_PASS,
-    "detail":("all "+str(len(wanted))+" required "
-      "counterparties appear in the sampled history")})
+    rows.append(_row(kind,len(wanted),len(wanted),R_PASS,
+    "all "+str(len(wanted))+" required counterparties "
+     "appear in the sampled history"))
    elif facts["parties_complete"]:
-    rows.append({"kind":kind,"required":len(wanted),
-    "actual":len(wanted)-len(missing),"status":R_FAIL,
-    "detail":("never interacted with "+", ".join(missing[:3])),
-    "missing":missing})
+    rows.append(_row(kind,len(wanted),len(wanted)-len(missing),
+    R_FAIL,"never interacted with "
+    +", ".join(missing[:MAX_MISSING_SHOWN]),missing))
    else:
-    rows.append({"kind":kind,"required":len(wanted),
-    "actual":len(wanted)-len(missing),"status":R_UNKNOWN,
-    "detail":("not in the most recent "+str(facts["sample_n"])
-    +" transactions, and the history is longer than the "
-      "sample - absence is not provable"),
-    "missing":missing})
+    rows.append(_row(kind,len(wanted),len(wanted)-len(missing),
+    R_UNKNOWN,"not in the most recent "
+    +str(facts["sample_n"])+" transactions, and the history "
+     "is longer than the sample - absence is not provable",
+    missing))
   elif kind==K_FAILPCT:
    if not facts["failed_known"]:
-    rows.append({"kind":kind,"required":want,"actual":-1,
-    "status":R_UNKNOWN,
-    "detail":"The recent transactions could not be read."})
+    rows.append(_row(kind,want,-1,R_UNKNOWN,
+    "The recent transactions could not be read."))
    else:
     got=int(facts["failed_pct"])
-    rows.append({"kind":kind,"required":want,"actual":got,
-    "status":R_PASS if got<=want else R_FAIL,
-    "detail":(str(got)+"% of the last "+str(facts["sample_n"])
-    +" transactions failed; "+str(want)+"% allowed")})
+    rows.append(_row(kind,want,got,
+    R_PASS if got<=want else R_FAIL,
+    str(got)+"% of the last "+str(facts["sample_n"])
+    +" transactions failed; "+str(want)+"% allowed"))
  return rows
 def _verdict_of(rows,conditions_total:int,unverifiable:int,parsed_ok:bool)->str:
  if not parsed_ok:
@@ -928,10 +931,21 @@ class PolicyGate(gl.contract.Contract):
   self.count_policies_deleted=u32(0)
  def _now(self)->int:
   return _epoch_from_iso(gl.message.raw.get("datetime",""))
+ def _id(self,raw)->int:
+  value=_as_int(raw,-1)
+  if value<0 or value>4294967295:
+   return-1
+  return value
  def _policy(self,policy_id:int):
-  return self.policies.get(u32(_clamp(_as_int(policy_id,-1),0,4294967295)))
+  found=self._id(policy_id)
+  if found<0:
+   return None
+  return self.policies.get(u32(found))
  def _check_row(self,check_id:int):
-  return self.checks.get(u32(_clamp(_as_int(check_id,-1),0,4294967295)))
+  found=self._id(check_id)
+  if found<0:
+   return None
+  return self.checks.get(u32(found))
  def _pair_key(self,policy_id:int,wallet:str)->str:
   return str(int(policy_id))+":"+wallet
  def _wallet_key(self,chain:str,wallet:str)->str:
@@ -1158,6 +1172,8 @@ class PolicyGate(gl.contract.Contract):
   check.status=C_SETTLED
   check.verdict=verdict
   check.settled_at=u64(now)
+  check.policy_version=u32(int(policy.version))
+  check.policy_hash=_content_hash(str(policy.policy_text))
   check.conditions_met=u32(_clamp(_as_int(result.get("conditions_met"),0),0,64))
   check.conditions_total=u32(_clamp(_as_int(result.get("conditions_total"),0),0,64))
   check.unverifiable=u32(_clamp(_as_int(result.get("unverifiable"),0),0,MAX_UNVERIFIABLE))

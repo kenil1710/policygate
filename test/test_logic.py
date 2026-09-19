@@ -2200,6 +2200,34 @@ class TestFetchFacts(unittest.TestCase):
 		self.assertFalse(f["retry"])
 		self.assertFalse(f["age_known"])
 		self.assertFalse(f["parties_complete"])
+		self.assertFalse(f["failed_known"])
+
+	def test_a_counter_with_no_list_to_cross_examine_it_is_NOT_trusted(self):
+		"""The one path that could still have produced a false denial.
+
+		base.blockscout.com serves `transactions_count: "0"` for busy wallets.
+		The cross-check catches it whenever the list is readable — but with an
+		unreadable page and nothing to compare against, trusting the counter
+		would answer a confident "0 transactions, DENIED" about a wallet with
+		hundreds. Unknown costs an INCONCLUSIVE; wrong costs a denial nobody can
+		appeal."""
+		wire("base", WALLET, counters=0, balance=GEN,
+			sample=healthy_sample(50), has_more=True)
+		NET[PURE._txs_url("base", WALLET)] = (200, "<html>nope</html>")
+		f = PURE._fetch_facts("base", WALLET, NOW_TS)
+		self.assertFalse(f["retry"])
+		self.assertFalse(f["tx_count_known"], "trusted a counter it could not check")
+		row = one(PURE.K_TX, 50, {"tx_count_known": False})
+		self.assertEqual(row["status"], "UNKNOWN")
+
+	def test_an_unreadable_page_never_yields_a_DENIED(self):
+		"""The same thing stated as the outcome that matters."""
+		MODEL["reply"] = parse_reply(txs=50)
+		wire("base", WALLET, counters=0, balance=GEN,
+			sample=healthy_sample(50), has_more=True)
+		NET[PURE._txs_url("base", WALLET)] = (200, "<html>nope</html>")
+		out = PURE._run_check("base", WALLET, POLICY, 0, NOW_TS)
+		self.assertEqual(out["verdict"], PURE.V_INCONCLUSIVE)
 
 	def test_the_evidence_digest_is_recorded(self):
 		wire("ethereum", WALLET, counters=500, balance=GEN,
@@ -2742,6 +2770,49 @@ class TestCheckAccess(unittest.TestCase):
 			self.assertIn(cond["status"], ("PASS", "FAIL", "UNKNOWN"))
 			self.assertIn("detail", cond)
 
+	def test_the_WIDEST_possible_breakdown_still_parses_when_stored(self):
+		"""Truncating JSON does not shorten it, it destroys it. A fragment cut at
+		a byte boundary would make get_check answer with an empty condition list
+		for a check that has one, and verify_check would then recompute from
+		nothing and report an honest check as unverified.
+
+		This builds the widest breakdown the contract can produce — all five
+		condition kinds, eight required interactions none of which the wallet
+		has met, every detail string at full length — and asserts what is stored
+		round-trips."""
+		c = C()
+		addrs = ["0x" + ("%040x" % (i + 1)) for i in range(PURE.MAX_INTERACTIONS)]
+		MODEL["reply"] = parse_reply(age=1095, txs=50000, bal="1000",
+			addrs=addrs, pct=0, unver=0)
+		pid = make_policy(c)["policy_id"]
+		# Unknown counts and a full page: the longest detail strings there are.
+		wire("ethereum", WALLET, counters=0, balance=1,
+			first_ts=NOW_TS - 2 * DAY,
+			sample=healthy_sample(PURE.SAMPLE_SIZE, failed=25), has_more=True)
+		out = jcall(c, "check_access", WALLET, pid)
+		self.assertTrue(out["ok"], out)
+
+		stored = str(c.checks[out["check_id"]].conditions_json)
+		self.assertLessEqual(len(stored), PURE.MAX_CONDITIONS_JSON)
+		parsed = json.loads(stored)          # the assertion: it still parses
+		self.assertEqual(len(parsed), 5, "all five condition kinds present")
+		for row in parsed:
+			self.assertLessEqual(len(row["detail"]), PURE.MAX_DETAIL_CHARS)
+			self.assertLessEqual(len(row.get("missing", [])), PURE.MAX_MISSING_SHOWN)
+
+		# And the view and the verifier both survive it.
+		got = jcall(c, "get_check", out["check_id"])["check"]
+		self.assertEqual(len(got["conditions"]), 5)
+		self.assertTrue(jcall(c, "verify_check", out["check_id"])["verified"])
+
+	def test_the_stored_facts_json_also_round_trips(self):
+		c = C()
+		pid = ready(c)
+		cid = jcall(c, "check_access", WALLET, pid)["check_id"]
+		stored = str(c.checks[cid].facts_json)
+		self.assertLessEqual(len(stored), PURE.MAX_FACTS_JSON)
+		self.assertIsInstance(json.loads(stored), dict)
+
 	def test_the_raw_facts_are_stored_as_evidence(self):
 		c = C()
 		pid = ready(c, counters=500, age_days=400)
@@ -2887,6 +2958,24 @@ class TestGrantLifecycle(unittest.TestCase):
 	def test_is_granted_is_false_for_a_missing_policy(self):
 		c = C()
 		self.assertFalse(call(c, "is_granted", WALLET, 99))
+
+	def test_a_bad_policy_id_does_NOT_alias_policy_zero(self):
+		"""Clamping an out-of-range id onto 0 would answer with policy zero's
+		grant. A composing contract with a typo in its policy id would gate on a
+		policy it never named — and be told true."""
+		c = C()
+		pid = ready(c)
+		self.assertEqual(pid, 0)
+		jcall(c, "check_access", WALLET, pid)
+		self.assertTrue(call(c, "is_granted", WALLET, 0))
+		for bad in (-1, -99, "abc", None, 2 ** 40):
+			self.assertFalse(call(c, "is_granted", WALLET, bad), repr(bad))
+			self.assertFalse(jcall(c, "get_policy", bad)["ok"], repr(bad))
+			self.assertFalse(jcall(c, "get_check", bad)["ok"], repr(bad))
+			self.assertFalse(jcall(c, "get_access_status", WALLET, bad)["granted"],
+				repr(bad))
+			self.assertFalse(jcall(c, "check_access", WALLET, bad)["ok"], repr(bad))
+			self.assertFalse(jcall(c, "verify_check", bad)["ok"], repr(bad))
 
 	def test_is_granted_is_false_once_the_policy_is_rewritten(self):
 		"""Tightening a policy would be cosmetic if everyone already through the
@@ -3395,6 +3484,30 @@ class TestVerifyCheck(unittest.TestCase):
 		out = jcall(c, "verify_check", cid)
 		self.assertTrue(out["verified"])
 		self.assertEqual(out["status"], "STALLED")
+
+	def test_a_policy_rewritten_mid_check_still_verifies(self):
+		"""A check can sit PENDING for a long time when the explorer is rate
+		limited, and the creator may rewrite the policy in the meantime. The
+		round reads the text LIVE, so the check must record the wording it was
+		actually decided against — otherwise verify_check recomputes from a text
+		nobody judged and calls an honest check forged."""
+		c = C()
+		pid = ready(c)
+		NET[PURE._counters_url("ethereum", WALLET)] = (503, "")
+		cid = jcall(c, "check_access", WALLET, pid)["check_id"]
+		self.assertEqual(jcall(c, "get_check", cid)["check"]["policy_version"], 1)
+
+		call(c, "update_policy", pid, POLICY + " It must also be a contract.",
+			sender=CREATOR)
+		grant_setup()
+		out = jcall(c, "resolve_check", cid, when=at("2026-09-19", "13:00:00"))
+		self.assertTrue(out["ok"], out)
+
+		row = jcall(c, "get_check", cid)["check"]
+		self.assertEqual(row["policy_version"], 2, "recorded the wording it was asked about")
+		self.assertFalse(row["stale"], "a check decided under the current text is not stale")
+		self.assertTrue(jcall(c, "verify_check", cid)["verified"],
+			jcall(c, "verify_check", cid)["checks"])
 
 	def test_it_says_plainly_that_it_does_not_refetch(self):
 		c = C()

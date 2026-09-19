@@ -30,7 +30,16 @@ const deployments = JSON.parse(readFileSync(new URL("../deployments.json", impor
 const address = deployments.deployments?.[networkName]?.PolicyGate?.address;
 if (!address) throw new Error(`no PolicyGate address recorded for ${networkName}`);
 
-const RESOLVE_ATTEMPTS = Number(argOf("resolve-attempts", "4"));
+/*
+ * Two quick attempts, not four.
+ *
+ * docs/PROBE.md §4: the quota a busy wallet's FIRST transaction needs is per
+ * host and Ethereum's did not forgive a burst for 25 minutes. No backoff this
+ * script can afford will outlast that, so it files the check, tries briefly,
+ * and leaves the rest to resolve_pending.mjs — which is permissionless, and is
+ * the point of the PENDING state existing at all.
+ */
+const RESOLVE_ATTEMPTS = Number(argOf("resolve-attempts", "2"));
 
 /* ── the policies ──────────────────────────────────────────────────────────
  *
@@ -81,18 +90,23 @@ const POLICIES = [
  * Real addresses, each checked on a chain where it has a history.
  */
 const ROSTER = [
-  { policy: 0, wallet: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", note: "vitalik.eth — ancient, busy, funded" },
-  { policy: 0, wallet: "0x28C6c06298d514Db089934071355E5743bf21d60", note: "Binance 14 — exchange hot wallet" },
-  { policy: 0, wallet: "0x33015b74a177b62554e5DcD8d622d1233CCf0cb4", note: "an address with no history at all" },
-  { policy: 1, wallet: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", note: "vitalik.eth on Base — where the counter reads 0" },
-  { policy: 1, wallet: "0x28C6c06298d514Db089934071355E5743bf21d60", note: "Binance 14 on Base" },
-  { policy: 1, wallet: "0x4200000000000000000000000000000000000006", note: "WETH predeploy — a contract, not a person" },
-  { policy: 2, wallet: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", note: "vitalik.eth on Arbitrum" },
-  { policy: 2, wallet: "0x1F98431c8aD98523631AE4a59f267346ea31F984", note: "Uniswap V3 factory on Arbitrum" },
-  { policy: 2, wallet: "0x33015b74a177b62554e5DcD8d622d1233CCf0cb4", note: "no history — should be denied on age" },
+  // Ordered so that the chains whose v1 quota recovers quickly come first, and
+  // so that a wallet needing NO v1 request at all (a history that fits one
+  // page) is in the first few. docs/PROBE.md §4a: the v1 call only happens when
+  // the v2 page comes back full, and eth.blockscout.com is where it is scarce.
+  { policy: 3, wallet: "0x28C6c06298d514Db089934071355E5743bf21d60", note: "Binance 14 on Polygon — 25 rows, whole history in one page, no v1 request" },
+  { policy: 2, wallet: "0x28C6c06298d514Db089934071355E5743bf21d60", note: "Binance 14 on Arbitrum — 23 rows, likewise" },
+  { policy: 2, wallet: "0x33015b74a177b62554e5DcD8d622d1233CCf0cb4", note: "no history at all — denied on age and count" },
   { policy: 3, wallet: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", note: "vitalik.eth on Polygon" },
-  { policy: 3, wallet: "0x28C6c06298d514Db089934071355E5743bf21d60", note: "Binance 14 on Polygon" },
-  { policy: 3, wallet: "0x1F98431c8aD98523631AE4a59f267346ea31F984", note: "Uniswap V3 factory on Polygon" },
+  { policy: 2, wallet: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", note: "vitalik.eth on Arbitrum" },
+  { policy: 1, wallet: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", note: "vitalik.eth on Base — the chain whose counter reads 0" },
+  { policy: 1, wallet: "0x28C6c06298d514Db089934071355E5743bf21d60", note: "Binance 14 on Base" },
+  { policy: 3, wallet: "0x1F98431c8aD98523631AE4a59f267346ea31F984", note: "Uniswap V3 factory on Polygon — a contract, not a person" },
+  { policy: 2, wallet: "0x1F98431c8aD98523631AE4a59f267346ea31F984", note: "Uniswap V3 factory on Arbitrum" },
+  { policy: 1, wallet: "0x4200000000000000000000000000000000000006", note: "WETH predeploy on Base" },
+  { policy: 0, wallet: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", note: "vitalik.eth — ancient, busy, funded" },
+  { policy: 0, wallet: "0x33015b74a177b62554e5DcD8d622d1233CCf0cb4", note: "no history, against the strictest count policy" },
+  { policy: 0, wallet: "0x28C6c06298d514Db089934071355E5743bf21d60", note: "Binance 14 — exchange hot wallet" },
   { policy: 4, wallet: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", note: "vitalik.eth vs a policy with an unverifiable clause" },
   { policy: 4, wallet: "0x33015b74a177b62554e5DcD8d622d1233CCf0cb4", note: "no history vs the same policy" },
 ];

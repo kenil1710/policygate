@@ -95,15 +95,31 @@ ck("every axis field is assigned from the agreed `result`",
    all(f in from_result for f in axis_fields),
    "bound: " + ", ".join(sorted(f for f in axis_fields if f in from_result)))
 
+# Everything that is a CLAIM ABOUT THE WALLET must come from the agreed vector.
+# Three other kinds of assignment are legitimate and are checked rather than
+# excused:
+#
+#   bookkeeping about the ROUND (status, settled_at, retry_count) — a leader
+#   cannot move a verdict or a bucket with any of them;
+#
+#   deterministic reads of CONTRACT STORAGE (policy_version, policy_hash) —
+#   every validator reads the same policy row, so these are as agreed as the
+#   axis is, and they are re-stamped at settlement precisely because the round
+#   reads the policy text live.
+#
+# The second kind is only allowed when the value really is a storage read, which
+# is asserted here rather than assumed.
+BOOKKEEPING = {"status", "settled_at", "retry_count"}
+FROM_STORAGE = {"policy_version", "policy_hash"}
 not_from_result = sorted({a for a, v in settle_assigns
                           if "result" not in v and a not in ("verdict",)})
-# `status`, `settled_at` and `retry_count` are bookkeeping about the ROUND, not
-# claims about the wallet: a leader cannot move a verdict or a bucket with any
-# of them, and none of them can produce a grant. Everything that IS a claim
-# about the wallet must come from the agreed vector.
 ck("no field that makes a claim about the wallet is invented locally",
-   set(not_from_result) <= {"status", "settled_at", "retry_count"},
+   set(not_from_result) <= (BOOKKEEPING | FROM_STORAGE),
    "local-only: " + ", ".join(not_from_result))
+storage_reads = {a: v for a, v in settle_assigns if a in FROM_STORAGE}
+ck("the fields taken from storage really are read from the policy row",
+   bool(storage_reads) and all("policy." in v for v in storage_reads.values()),
+   "; ".join("%s = %s" % (k, v) for k, v in sorted(storage_reads.items())))
 
 ck("the parsed conditions are bound too (they feed the content hash)",
    "cond_text" in ast.unparse(fn("_run_check")) and
