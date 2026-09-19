@@ -26,8 +26,8 @@
     "first_transaction": "/api?module=account&action=txlist&sort=asc&page=1&offset=1 — read ONLY when the v2 page came back full; see docs/PROBE.md §4"
   },
   "verification": {
-    "offline_tests": 385,
-    "checklist_items": 78,
+    "offline_tests": 393,
+    "checklist_items": 79,
     "fixtures": "test/fixtures.json — 71 verbatim Blockscout bodies from four live hosts, gzipped, byte-identical after decoding",
     "artifact_is_tested": "the whole battery re-runs through build/PolicyGate.min.py via the emitted name map"
   },
@@ -44,11 +44,11 @@
     "studiodev": {
       "network": "studiodev",
       "PolicyGate": {
-        "address": "0xACBc496560B298837fCc624aF901F5a181Ae47DE"
+        "address": "0x30d7b6C4c88a4345128300471dBe6aFaDa1902Dc"
       },
       "owner": "0x2201ae2E777BFa1341bf4fED12bf7b56257614Ca",
-      "artifact_bytes": 43330,
-      "deployed_at": "2026-09-19T06:19:54.993Z"
+      "artifact_bytes": 43175,
+      "deployed_at": "2026-09-19T06:22:11.552Z"
     }
   }
 }

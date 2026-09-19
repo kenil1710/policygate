@@ -216,21 +216,21 @@ contracts/PolicyGate.py     the contract, with its reasoning
 contracts/NOTES.md          hazards and decisions not recoverable from the code
 docs/PROBE.md               every measurement, with numbers
 build/PolicyGate.min.py     the deployed artifact (42 KB)
-test/test_logic.py          385 offline tests — source AND mangled artifact
+test/test_logic.py          393 offline tests — source AND mangled artifact
 test/fixtures.json          71 verbatim Blockscout bodies from four live hosts
 test/deploy.mjs             deploys the artifact, never the source
 test/seed.mjs               5 policies across 4 chains, 14 real wallets checked
 test/e2e.mjs                live integration suite
 test/resolve_pending.mjs    the operational half of the RETRY design
 tools/build.sh              minify → mangle → lint
-tools/checklist.py          77 rejection-pattern checks, decided by parsing
+tools/checklist.py          79 rejection-pattern checks, decided by parsing
 tools/audit.sh              all of the above in one command
 ```
 
 ## Running it
 
 ```bash
-bash tools/audit.sh                          # build + checklist + 385 tests + chain state
+bash tools/audit.sh                          # build + checklist + 393 tests + chain state
 
 cd test && npm install
 node accounts.mjs                            # a stable pool of signing keys
