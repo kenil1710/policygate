@@ -1,0 +1,54 @@
+{
+  "project": "PolicyGate",
+  "tagline": "Access control written in English, decided by consensus.",
+  "category": "Intelligent Contracts",
+  "summary": "An owner writes an access policy in plain English. Anyone may ask whether a given wallet satisfies it. Five GenLayer validators independently PARSE the policy into structured conditions, independently FETCH the wallet's history from Blockscout on one of four chains, independently EVALUATE each condition in Python against the numbers they fetched, and agree on a seven-field feature vector. Any contract can then call is_granted(wallet, policy_id) and get a bool. The model reads the policy and is never shown a wallet; every decision is integer comparison on numbers five validators fetched separately.",
+  "runner": "py-genlayer:5jycge4q8k23462jtb0b9fyey1s9qz928sz2nbrd9mg4sxqg2qng",
+  "consensus": {
+    "axis": "A seven-field feature vector joined into one string: verdict | conditions_met | conditions_total | wallet_age_bucket | tx_count_bucket | balance_bucket | content_hash. RETRY sits on the same axis because it is not a verdict - validators must AGREE that the explorer was transiently unavailable.",
+    "why_quantised": "docs/PROBE.md §5: the same wallet fetched twice seconds apart returned DIFFERENT bodies on 5 of 7 captures - confirmations moves on every row of every chain, and Base additionally finished decoding method names between the two fetches. A raw digest on the axis would have disagreed on 4 of 4 chains; the quantised vector disagreed on 0 of 4.",
+    "content_hash": "On the axis, and allowed there because it hashes NO explorer bytes: its inputs are the policy id, the policy text hash, the wallet, the chain, the canonical parse and the six other axis fields. It binds them together and can never itself be what validators fall out over.",
+    "evidence_digest": "Stored on every check as evidence and NEVER voted on.",
+    "leader_cannot_forge": "Wallet age, transaction count and balance are all on the axis in bucketed form, so a leader cannot report a four-year-old wallet where five validators saw a four-day-old one. _coherent additionally refuses a GRANTED that did not meet every condition, a GRANTED over zero conditions, and a GRANTED beside an unverifiable requirement.",
+    "conservative": "Every fact carries a `known` flag and every condition can answer UNKNOWN. An unknown, an unverifiable requirement, a failed parse or an empty parse all give INCONCLUSIVE - never GRANTED. A lower-bound transaction count may prove a PASS and may never prove a FAIL.",
+    "no_raise": "The contract contains ZERO raise statements and no payable method, both asserted by parsing the AST of the source and of the built artifact. A rejection is a successful transaction returning {\"ok\": false, \"reason\": ...}; the RETRY path writes nothing, so it needs no rollback."
+  },
+  "chains_read": {
+    "ethereum": "eth.blockscout.com",
+    "base": "base.blockscout.com",
+    "arbitrum": "arbitrum.blockscout.com",
+    "polygon": "polygon.blockscout.com"
+  },
+  "endpoints": {
+    "counters": "/api/v2/addresses/{w}/counters",
+    "balance": "/api/v2/addresses/{w}",
+    "transactions": "/api/v2/addresses/{w}/transactions",
+    "first_transaction": "/api?module=account&action=txlist&sort=asc&page=1&offset=1 — read ONLY when the v2 page came back full; see docs/PROBE.md §4"
+  },
+  "verification": {
+    "offline_tests": 385,
+    "checklist_items": 78,
+    "fixtures": "test/fixtures.json — 71 verbatim Blockscout bodies from four live hosts, gzipped, byte-identical after decoding",
+    "artifact_is_tested": "the whole battery re-runs through build/PolicyGate.min.py via the emitted name map"
+  },
+  "artifacts": {
+    "build/PolicyGate.min.py": {
+      "source": "contracts/PolicyGate.py",
+      "bytes": 43308,
+      "sha256": "fe02896d690e3b402a0ea263722d03bfcd5c27400ee4e53fa7ddadd9ad3fade6",
+      "source_sha256": "c54d2176c71933a8a71bea18a8764335534ac01aa6fb9b739697edfa8f1aaaaa",
+      "premangle_bytes": 58527
+    }
+  },
+  "deployments": {
+    "studiodev": {
+      "network": "studiodev",
+      "PolicyGate": {
+        "address": "0xB32a5A3f383Cf8F3cE79e9B01a54b4426a89382D"
+      },
+      "owner": "0x2201ae2E777BFa1341bf4fED12bf7b56257614Ca",
+      "artifact_bytes": 43308,
+      "deployed_at": "2026-09-19T06:15:40.118Z"
+    }
+  }
+}
