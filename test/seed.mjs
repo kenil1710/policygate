@@ -168,4 +168,18 @@ const stats = await reader.viewJson("get_stats", []);
 console.log(`\n  policies ${stats.policies_active} active / ${stats.policies_created} created`);
 console.log(`  checks   ${stats.checks_filed} filed — ${stats.granted} granted, ${stats.denied} denied, `
   + `${stats.inconclusive} inconclusive, ${stats.pending} pending, ${stats.retries} retries`);
-console.log(`  decided  ${stats.decided}   grant rate ${(stats.grant_rate_bps / 100).toFixed(1)}%\n`);
+console.log(`  decided  ${stats.decided}   grant rate ${(stats.grant_rate_bps / 100).toFixed(1)}%`);
+
+if (stats.pending > 0) {
+  /*
+   * Not a failure. docs/PROBE.md §4: the v1 quota that a busy wallet's FIRST
+   * transaction needs is per host, and Ethereum's is the tight one — it had not
+   * forgiven a burst 25 minutes later, while the other three had. Those checks
+   * are filed, valid, and decidable by anybody the moment the quota frees.
+   */
+  console.log(`\n  ${stats.pending} check(s) are still PENDING — the explorer was rate limited.`);
+  console.log(`  Anyone can finish them; no privilege and no re-filing needed:\n`);
+  console.log(`      node resolve_pending.mjs --network=${networkName} --rounds=4 --gap=300\n`);
+} else {
+  console.log("");
+}

@@ -146,7 +146,7 @@ stopped settling. Interleaving the two APIs one second apart, from one address:
 
 Six for six, each way, alternating. They are not one budget.
 
-And the v1 budget is not a burst limit — it does not recover:
+And the v1 budget is not a burst limit. On `eth.blockscout.com`:
 
 ```
   after   0s idle   v1 HTTP 429   (a different v1 action: 429)
@@ -158,6 +158,23 @@ And the v1 budget is not a burst limit — it does not recover:
 The whole `/api` path is limited, not one action, and ninety seconds of complete
 silence did not clear it. Meanwhile `/api/v2/addresses/{w}/transactions` answered
 **12 of 12** across all four hosts and all three probe wallets.
+
+**The quota is per host, and Ethereum's is the tight one.** Twenty-five minutes
+after that burst, one request per host:
+
+```
+  eth        v1 HTTP 429      v2 HTTP 200
+  base       v1 HTTP 200      v2 HTTP 200
+  arbitrum   v1 HTTP 200      v2 HTTP 200
+  polygon    v1 HTTP 200      v2 HTTP 200
+```
+
+Three of the four had forgiven us; `eth.blockscout.com` had not. That is worth
+stating precisely, because the earlier "does not recover" was measured on
+Ethereum alone and is not true of the other three. The practical shape of it:
+checks against **busy** wallets on **Ethereum** are the ones that sit PENDING
+and need `resolve_check` called again later. Everything else settles on the
+first attempt.
 
 This was visible on the live deployment before it was diagnosed: the first check
 against a policy settled normally, and the two behind it exhausted the validators'
@@ -174,6 +191,44 @@ The v2 page also turned out to be the better document: `next_page_params` states
 *exactly* whether more transactions exist, where the v1 row count could only be
 guessed at, and that is precisely the difference between proving a required
 interaction is absent and merely failing to find it.
+
+### 4a. Why the v1 endpoint was kept rather than dropped entirely
+
+The tempting next step is to delete the v1 call altogether. A full page of 50
+transactions proves the wallet's first transaction is *at least* as old as its
+oldest row — a LOWER BOUND on age, exactly the shape rule 5 already handles — and
+since every age condition this contract supports is a *minimum*, a lower bound
+answers it whenever it can be answered at all. No v1 call, no quota, no RETRY.
+
+It was measured before it was believed. Across the twelve captured wallet/chain
+pairs with any history, what one page proves on its own:
+
+```
+  >=    7 days   proved for 11/12 wallets from the page alone
+  >=   30 days   proved for 11/12
+  >=   90 days   proved for  9/12
+  >=  180 days   proved for  4/12
+  >=  365 days   proved for  3/12
+  >= 1095 days   proved for  1/12
+```
+
+The page spans are what drive it — `arbitrum:binance` is 23 rows covering 1,226
+days, while `ethereum:binance` is 50 rows covering **less than one day**, because
+an exchange hot wallet fills a page in an afternoon. `ethereum:vitalik` proves
+only 60 days.
+
+So a page-only design would answer INCONCLUSIVE to "at least one year old" for
+three quarters of real busy wallets — and "Ethereum Veteran", the first seeded
+policy, asks for exactly that. The v1 call earns its place, and its failure is
+handled the way every other unavailable fact is: as RETRY, which is
+deterministic, rather than as a fallback, which would not be.
+
+**Why not fall back to the lower bound when v1 answers 429?** Because the
+fallback is not a property of the wallet, it is a property of one validator's
+luck. A node that got its v1 answer would compute an exact age and a node that
+was rate-limited would compute a bound, the two would land in different buckets,
+and the round would be UNDETERMINED — trading a clean RETRY for a dirty one.
+Every branch in `_fetch_facts` is taken on data every validator sees.
 
 **RETRY remains load-bearing.** A 429 anywhere is transient, so the whole check
 becomes RETRY, the check stays PENDING, and `resolve_check` runs it again later.
@@ -336,3 +391,8 @@ Two further canonicalisations collapse the rest of that class:
 - **A policy this gate cannot express is INCONCLUSIVE, never GRANTED**, but it
   is also never DENIED. The gate declines to decide rather than deciding wrongly,
   and `is_granted` answers false either way.
+- **A busy wallet on Ethereum may need several attempts to settle.** It is the
+  one case that still depends on the scarce v1 quota (§4a says why the
+  alternative is worse), and `resolve_check` is permissionless precisely so that
+  anyone can carry it. `settle_stalled` closes it as INCONCLUSIVE if the quota
+  never frees. Neither path can invent a grant.

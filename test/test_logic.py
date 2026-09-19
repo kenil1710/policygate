@@ -3646,6 +3646,65 @@ class TestRealBodies(unittest.TestCase):
 		it, and neither must anything derived from it."""
 		self.assertNotIn("confirmations", SRC_TEXT)
 
+	def test_one_page_does_NOT_prove_the_age_a_real_policy_asks_for(self):
+		"""docs/PROBE.md §4a: the evidence for keeping the v1 first-transaction
+		fetch rather than deriving age from the page as a lower bound.
+
+		A full page proves the first transaction is at least as old as its
+		oldest row. For short histories that is the exact answer and no v1
+		request happens at all. For busy wallets it is nowhere near enough - an
+		exchange hot wallet fills a page in under a day - and "at least one year
+		old" is what the first seeded policy asks for."""
+		proved = total = 0
+		shortest = None
+		for key, entry in FIX.items():
+			if not key.endswith(":txs") or entry["status"] != 200:
+				continue
+			ok, items, more = PURE._v2_rows(entry["body"])
+			if not ok or not items:
+				continue
+			stamps = [PURE._row_v2(i, "0x" + "0" * 40)["ts"] for i in items]
+			stamps = [t for t in stamps if t > 0]
+			if not stamps:
+				continue
+			total += 1
+			bound = (NOW_TS - min(stamps)) // 86400
+			if bound >= 365:
+				proved += 1
+			if shortest is None or bound < shortest:
+				shortest = bound
+		self.assertGreater(total, 6, "not enough captured pages to measure")
+		self.assertLess(proved, total // 2,
+			"a page now proves a year for most wallets; the v1 fetch may be "
+			"droppable - re-read docs/PROBE.md §4a before assuming so")
+		self.assertLessEqual(shortest, 7,
+			"no captured wallet fills a page quickly any more; §4a's example is "
+			"stale")
+
+	def test_a_short_history_needs_no_v1_fetch_on_real_bodies(self):
+		"""The other half of §4a, and the reason the change was worth making:
+		for a wallet whose whole history fits one page, the age is exact and the
+		rate-limited endpoint is never touched."""
+		found = 0
+		for chain in PURE.CHAINS:
+			for who in ("binance", "fresh"):
+				entry = FIX.get(chain + ":" + who + ":txs")
+				if not entry or entry["status"] != 200:
+					continue
+				ok, items, more = PURE._v2_rows(entry["body"])
+				if not ok or more:
+					continue
+				found += 1
+				self.assertTrue(wire_fixture(chain, who))
+				# Remove the v1 body entirely: reaching for it would raise in
+				# the stub, so this asserts the contract never reaches for it.
+				NET.pop(PURE._txlist_url(chain, FIXTURE_WALLETS[who], True, 1), None)
+				f = PURE._fetch_facts(chain, FIXTURE_WALLETS[who], NOW_TS)
+				self.assertFalse(f["retry"], chain + ":" + who)
+				self.assertTrue(f["age_known"], chain + ":" + who)
+				self.assertTrue(f["tx_count_exact"], chain + ":" + who)
+		self.assertGreater(found, 0, "no captured wallet had a short history")
+
 	def test_a_real_rate_limited_body_is_transient(self):
 		self.assertTrue(PURE._transient(429))
 		# and it is not mistaken for a transaction list
