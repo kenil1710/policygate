@@ -9,9 +9,12 @@
  * real chain with real signers.
  *
  * WHAT IT DELIBERATELY DOES NOT DO: run a consensus round for every assertion.
- * A check_access is four Blockscout fetches per validator plus a model call, and
- * docs/PROBE.md §4 measured the explorer rate limiting that hard. The rounds
- * live in seed.mjs; this suite proves the surface around them.
+ * A check_access is three Blockscout fetches per validator plus a model call —
+ * four for a busy wallet — and docs/PROBE.md §4 measured the explorers rate
+ * limiting that hard. It runs exactly one round, against a wallet with no
+ * history, which needs no v1 request and so settles without touching the scarce
+ * quota. The rest of the rounds live in seed.mjs; this suite proves the surface
+ * around them.
  *
  * A REJECTION IS A SUCCESSFUL TRANSACTION HERE. PolicyGate contains zero raise
  * statements, so a refused call settles normally and returns
@@ -32,7 +35,18 @@ const TEXT2 = "This rewritten test policy requires a wallet at least 365 days ol
 const WALLET = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
 const FRESH = "0x33015b74a177b62554e5DcD8d622d1233CCf0cb4";
 
-const creator = connect({ networkName, address, role: "creator2" });
+/*
+ * `client` creates this suite's policy, and the choice is not arbitrary: seed.mjs
+ * spends creator, creator2, requester, requester2 and resolver on its five
+ * policies, and create_policy is rate limited to one per wallet per 300s. An e2e
+ * run started soon after a seed with any of those roles would be refused by the
+ * cooldown and read as a failure of the thing it was trying to test.
+ *
+ * It also demonstrates something worth demonstrating: the owner gets no special
+ * standing over a policy. It is the creator of this one, and the access-control
+ * block below still checks that a stranger cannot touch it.
+ */
+const creator = connect({ networkName, address, role: "client" });
 const outsider = connect({ networkName, address, role: "outsider" });
 const reader = connect({ networkName, address, role: "client" });
 

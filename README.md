@@ -222,6 +222,7 @@ test/deploy.mjs             deploys the artifact, never the source
 test/seed.mjs               5 policies across 4 chains, 14 real wallets checked
 test/e2e.mjs                live integration suite
 test/resolve_pending.mjs    the operational half of the RETRY design
+test/record.mjs             writes what the chain holds into deployments.json
 tools/build.sh              minify → mangle → lint
 tools/checklist.py          79 rejection-pattern checks, decided by parsing
 tools/audit.sh              all of the above in one command
@@ -237,7 +238,8 @@ node accounts.mjs                            # a stable pool of signing keys
 node deploy.mjs   --network=studiodev
 node seed.mjs     --network=studiodev        # 5 policies, 14 wallets
 node e2e.mjs      --network=studiodev
-node resolve_pending.mjs --network=studiodev --settle
+node resolve_pending.mjs --network=studiodev --rounds=4 --gap=300
+node record.mjs   --network=studiodev        # snapshot the chain into deployments.json
 ```
 
 **Expect RETRYs.** Three fetches per validator, four for a busy wallet, all
@@ -250,6 +252,11 @@ way a busy gate makes progress.
 
 ## Deployment
 
-See `deployments.json` for the current address, the artifact checksum and the
-seeded policies. `tools/audit.sh` verifies that the deployed checksum still
-matches what this tree builds.
+`deployments.json` carries the current address, the artifact checksum, every
+seeded policy with its text and its parse stability, and every check with the
+seven-field vector five validators agreed on. It is written by `record.mjs`
+reading the chain back — not by whatever script last wrote to it — so it is a
+snapshot rather than a claim.
+
+`tools/audit.sh` verifies that the deployed checksum still matches what this
+tree builds, and prints the live counts beside it.
