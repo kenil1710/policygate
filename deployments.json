@@ -44,11 +44,11 @@
     "studiodev": {
       "network": "studiodev",
       "PolicyGate": {
-        "address": "0x30d7b6C4c88a4345128300471dBe6aFaDa1902Dc"
+        "address": "0xCd0865Ce2c7bC04038c1aA6dB24A3c52c824E63F"
       },
       "owner": "0x2201ae2E777BFa1341bf4fED12bf7b56257614Ca",
-      "artifact_bytes": 43175,
-      "deployed_at": "2026-09-19T06:22:11.552Z"
+      "artifact_bytes": 44076,
+      "deployed_at": "2026-09-19T06:26:15.692Z"
     }
   }
 }

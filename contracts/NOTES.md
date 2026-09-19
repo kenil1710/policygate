@@ -495,6 +495,32 @@ is the price of putting the numbers on the axis at all — and leaving them off 
 what would let a leader forge them. The log-scale buckets are chosen so the edges
 are far from where wallets cluster.
 
+**The v1 call is made more often than it is needed, and closing that is the
+next change to make.** `_run_check` fetches before it parses, so `_fetch_facts`
+does not know the age threshold and cannot tell whether the page's own lower
+bound already settles it. Measured on the seeded policies against vitalik.eth:
+
+| policy | requires | the page alone proves | v1 needed? |
+|---|---|---|---|
+| Arbitrum Active Trader | 90 days | 217 days | **no** |
+| Polygon Holder | 30 days | 149 days | **no** |
+| Base Early Adopter | 180 days | 39 days | yes |
+| Ethereum Veteran | 365 days | 60 days | yes |
+
+Two of those four checks spent a v1 request they did not need, and both of them
+landed PENDING for it. Parsing before fetching would let the fetch skip the v1
+call whenever `page_lower_bound >= required_age`, and it would stay
+deterministic — the parse is on the consensus axis, so every validator holds the
+same threshold and takes the same branch.
+
+It is not done here because it trades away the property in §3 that the explorer
+is read before a model is asked anything, which is what makes a down explorer
+cost a fetch rather than a model call. That is a real property and a checklist
+item asserts it. The trade is probably still worth making — the v1 quota is by
+far the scarcer of the two resources — but it is a restructuring of the
+consensus payload, and the right time for it is with a fresh test cycle rather
+than at the end of one.
+
 **`max_failed_tx_pct` is a statistic over a sample, not over a history.** It reads
 the served page — at most 50 transactions, and only those older than five minutes.
 The stored condition detail says so in as many words — "4% of the last 50
