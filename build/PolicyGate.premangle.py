@@ -625,10 +625,14 @@ def _evaluate(conditions,facts,chain:str)->list:
     "The first transaction could not be read."))
    else:
     got=int(facts["age_days"])
+    if int(facts["first_tx_ts"])<=0:
+     detail=("this wallet has no transactions on this chain, so "
+      "it has no age; "+str(want)+" days required")
+    else:
+     detail=("first transaction "+str(got)+" days ago; "
+     +str(want)+" required")
     rows.append(_row(kind,want,got,
-    R_PASS if got>=want else R_FAIL,
-    "first transaction "+str(got)+" days ago; "
-    +str(want)+" required"))
+    R_PASS if got>=want else R_FAIL,detail))
   elif kind==K_TX:
    if not facts["tx_count_known"]:
     rows.append(_row(kind,want,-1,R_UNKNOWN,

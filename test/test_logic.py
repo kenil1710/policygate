@@ -1761,7 +1761,7 @@ def facts(**kw):
 		"age_days": 0, "age_known": True, "first_tx_ts": 0,
 		"tx_count": 0, "tx_count_known": True, "tx_count_exact": True,
 		"balance_wei": 0, "balance_known": True,
-		"failed_pct": 0, "failed_known": True,
+		"failed_pct": 0, "failed_known": True, "first_tx_ts": 1,
 		"sample_n": 25, "sample_full": False,
 		"parties": [], "parties_complete": True, "digest": ""}
 	base.update(kw)
@@ -1797,6 +1797,20 @@ class TestEvaluateAge(unittest.TestCase):
 		"""age_known stays true for an empty history: "never used" is a real
 		answer and is exactly the population an age gate exists to exclude."""
 		self.assertEqual(one(PURE.K_AGE, 30, {"age_days": 0})["status"], "FAIL")
+
+	def test_a_wallet_with_no_history_does_not_claim_a_transaction_today(self):
+		"""This string is what a denied requester reads to understand the
+		denial. "first transaction 0 days ago" says the opposite of what
+		happened — it sounds like the wallet transacted today."""
+		empty = one(PURE.K_AGE, 30, {"age_days": 0, "first_tx_ts": 0})
+		self.assertEqual(empty["status"], "FAIL")
+		self.assertIn("no transactions", empty["detail"])
+		self.assertNotIn("0 days ago", empty["detail"])
+
+		# A wallet that really did transact today still says so.
+		today = one(PURE.K_AGE, 30, {"age_days": 0, "first_tx_ts": NOW_TS - 60})
+		self.assertIn("0 days ago", today["detail"])
+		self.assertNotIn("no transactions", today["detail"])
 
 
 class TestEvaluateTxCount(unittest.TestCase):

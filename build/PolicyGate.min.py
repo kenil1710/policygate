@@ -5,17 +5,17 @@ from genlayer import*
 from dataclasses import dataclass
 import json
 ay="GRANTED"
-ca="DENIED"
+cb="DENIED"
 L="INCONCLUSIVE"
 dZ="RETRY"
 es=""
 ba="ACTIVE"
 dm="DELETED"
 aN="PENDING"
-cn="SETTLED"
-bO="STALLED"
+co="SETTLED"
+bP="STALLED"
 bm="PASS"
-bF="FAIL"
+bG="FAIL"
 ak="UNKNOWN"
 ap={
 "ethereum":"eth.blockscout.com",
@@ -34,13 +34,13 @@ dz="0x0000000000000000000000000000000000000000"
 dT=50
 bn=300
 aM=50
-V=1000
+W=1000
 df=100
-bV=300
+bW=300
 Y=600
 cG=160
 at=2600
-bu=3
+bv=3
 dg=700
 R=100
 eJ=500
@@ -50,7 +50,7 @@ aF=300
 aG=300
 au=24*3600
 eI=30*86400
-co=900
+cp=900
 aH=25
 dU="<<<UNTRUSTED_CONTENT_BEGIN>>>"
 et="<<<UNTRUSTED_CONTENT_END>>>"
@@ -58,7 +58,7 @@ dA=("UNTRUSTED_CONTENT_BEGIN","UNTRUSTED_CONTENT_END")
 ed=("​","‌","‍","⁠","﻿","­",
 "‪","‫","‬","‭","‮",
 "⁦","⁧","⁨","⁩","᠎")
-cp=(
+cq=(
 "ignore the above","ignore previous","ignore all previous",
 "disregard the","disregard previous","you are now",
 "new instructions","system prompt","always return","always answer",
@@ -79,17 +79,17 @@ ee=(0,
 100000000000000000000,250000000000000000000,500000000000000000000,
 1000000000000000000000,10000000000000000000000)
 cS=(0,1,2,5,10,15,20,25,30,40,50,60,75,90,100)
-cq=(0,7,30,90,180,365,1095)
+cr=(0,7,30,90,180,365,1095)
 cH=(0,1,10,50,250,1000,10000)
-cr=(0,1,10000000000000000,100000000000000000,
+cs=(0,1,10000000000000000,100000000000000000,
 1000000000000000000,10000000000000000000,100000000000000000000)
 bb=0
 ef="wallet_age_days"
 eK="min_tx_count"
 eg="min_balance"
-bw="required_interactions"
-cs="max_failed_tx_pct"
-cT=(ef,eK,eg,bw,cs)
+bx="required_interactions"
+ct="max_failed_tx_pct"
+cT=(ef,eK,eg,bx,ct)
 def w(o:int,fE:int,fk:int)->int:
  if o<fE:
   return fE
@@ -129,7 +129,7 @@ def av(text:str)->bool:
  if not isinstance(text,str):
   return False
  body=" ".join(text.split()).lower()
- for fl in cp:
+ for fl in cq:
   if body.find(fl)>=0:
    return True
  return False
@@ -143,7 +143,7 @@ def K(text:str)->str:
  for fL in cU.encode("utf-8"):
   h=((h^fL)*0x100000001B3)&0xFFFFFFFFFFFFFFFF
  return"%016x"%h
-def bT(o)->str:
+def bU(o)->str:
  s=str(o).strip().lower()
  if s in ap:
   return s
@@ -172,8 +172,8 @@ def aw(raw)->str:
   return("A policy needs at least "+str(aM)
   +" characters: say what a wallet must satisfy to pass. This one is "
   +str(len(body)))
- if len(body)>V:
-  return("A policy is capped at "+str(V)
+ if len(body)>W:
+  return("A policy is capped at "+str(W)
   +" characters; this one is "+str(len(body)))
  return""
 def cI(y:int,m:int,d:int)->int:
@@ -183,7 +183,7 @@ def cI(y:int,m:int,d:int)->int:
  fQ=(153*(m+(-3 if m>2 else 9))+2)//5+d-1
  fR=fm*365+fm//4-fm//100+fQ
  return fF*146097+fR-719468
-def bP(o)->int:
+def bQ(o)->int:
  if not isinstance(o,str)or len(o)<19:
   return 0
  try:
@@ -209,7 +209,7 @@ def dw(o:int,ex)->int:
    dD=ei
    dE=fG
  return dD
-def bE(o:int,eT)->int:
+def bF(o:int,eT)->int:
  eU=1
  for i in range(len(eT)):
   if o>=eT[i]:
@@ -219,15 +219,15 @@ def do(raw)->str:
  o=f(raw,0)
  if o<0:
   o=0
- bQ=o//(10**18)
- cb=o-bQ*(10**18)
- text=str(bQ)
- if cb==0:
+ bR=o//(10**18)
+ cc=o-bR*(10**18)
+ text=str(bR)
+ if cc==0:
   return text
- ct=("%018d"%cb)
- while len(ct)>1 and ct[-1]=="0":
-  ct=ct[:-1]
- return text+"."+ct[:6]
+ cu=("%018d"%cc)
+ while len(cu)>1 and cu[-1]=="0":
+  cu=cu[:-1]
+ return text+"."+cu[:6]
 def cB(raw)->int:
  if isinstance(raw,int)and not isinstance(raw,bool):
   return raw*(10**18)if raw>=0 else-1
@@ -243,42 +243,42 @@ def cB(raw)->int:
   return-1
  fp=s.find(".")
  if fp<0:
-  bQ,cb=s,""
+  bR,cc=s,""
  else:
-  bQ,cb=s[:fp],s[fp+1:]
-  if cb.find(".")>=0:
+  bR,cc=s[:fp],s[fp+1:]
+  if cc.find(".")>=0:
    return-1
- if not bQ:
-  bQ="0"
- for ch in bQ+cb:
+ if not bR:
+  bR="0"
+ for ch in bR+cc:
   if ch not in"0123456789":
    return-1
- cb=(cb+"0"*18)[:18]
+ cc=(cc+"0"*18)[:18]
  try:
-  return int(bQ)*(10**18)+int(cb)
+  return int(bR)*(10**18)+int(cc)
  except Exception:
   return-1
 def dt(u:str,k:str)->str:
- bG=ap.get(u,"")
- if not bG or not k:
+ bH=ap.get(u,"")
+ if not bH or not k:
   return""
- return"https://"+bG+"/api/v2/addresses/"+k+"/counters"
+ return"https://"+bH+"/api/v2/addresses/"+k+"/counters"
 def dF(u:str,k:str)->str:
- bG=ap.get(u,"")
- if not bG or not k:
+ bH=ap.get(u,"")
+ if not bH or not k:
   return""
- return"https://"+bG+"/api/v2/addresses/"+k
+ return"https://"+bH+"/api/v2/addresses/"+k
 def eN(u:str,k:str)->str:
- bG=ap.get(u,"")
- if not bG or not k:
+ bH=ap.get(u,"")
+ if not bH or not k:
   return""
- return"https://"+bG+"/api/v2/addresses/"+k+"/transactions"
+ return"https://"+bH+"/api/v2/addresses/"+k+"/transactions"
 def dW(u:str,k:str,ey:bool,fq:int)->str:
- bG=ap.get(u,"")
- if not bG or not k:
+ bH=ap.get(u,"")
+ if not bH or not k:
   return""
  fA="asc"if ey else"desc"
- return("https://"+bG+"/api?module=account&action=txlist&address="
+ return("https://"+bH+"/api?module=account&action=txlist&address="
  +k+"&sort="+fA+"&page=1&offset="+str(int(fq)))
 def dx(fr:str)->tuple:
  if not fr:
@@ -300,7 +300,7 @@ def dx(fr:str)->tuple:
   body=body.decode("utf-8",errors="ignore")
  return(int(status)if status is not None else 0,
  str(body)if body is not None else"")
-def bx(status:int)->bool:
+def by(status:int)->bool:
  return status==0 or status==429 or(status>=500 and status<=599)
 def H(body:str):
  try:
@@ -327,23 +327,23 @@ def eP(body:str)->tuple:
  if message.find("no transactions found")>=0:
   return(True,[])
  return(False,[])
-def fg(cc,k:str)->dict:
- if not isinstance(cc,dict):
+def fg(cd,k:str)->dict:
+ if not isinstance(cd,dict):
   return{"ts":0,"failed":False,"parties":[]}
- status=cc.get("status")
+ status=cd.get("status")
  if status is not None:
   az=str(status)!="ok"
  else:
-  D=cc.get("result")
+  D=cd.get("result")
   az=D is not None and str(D)!="success"
  aa=[]
- for fs in(cc.get("from"),cc.get("to"),cc.get("created_contract")):
+ for fs in(cd.get("from"),cd.get("to"),cd.get("created_contract")):
   if not isinstance(fs,dict):
    continue
   aA=F(fs.get("hash"))
   if aA and aA!=k and aA not in aa:
    aa.append(aA)
- return{"ts":bP(cc.get("timestamp")),"failed":bool(az),
+ return{"ts":bQ(cd.get("timestamp")),"failed":bool(az),
  "parties":aa}
 def fh(ax,k:str)->dict:
  if not isinstance(ax,dict):
@@ -374,17 +374,17 @@ def dH(u:str,k:str,z:int)->dict:
   bh["reason"]="PolicyGate cannot read wallets on this chain."
   return bh
  status,body=dx(dt(u,k))
- if bx(status):
+ if by(status):
   bh["retry"]=True
   return bh
  dI=H(body)if status==200 else None
- by=-1
+ bz=-1
  if isinstance(dI,dict):
   raw=dI.get("transactions_count")
   if raw is not None:
-   by=f(raw,-1)
+   bz=f(raw,-1)
  status,body=dx(dF(u,k))
- if bx(status):
+ if by(status):
   bh["retry"]=True
   return bh
  bi=0
@@ -401,17 +401,17 @@ def dH(u:str,k:str,z:int)->dict:
  elif status==404:
   aJ=True
  status,body=dx(eN(u,k))
- if bx(status):
+ if by(status):
   bh["retry"]=True
   return bh
  aO=False
  cV=[]
- bH=False
+ bI=False
  if status==200:
-  aO,cV,bH=eO(body)
+  aO,cV,bI=eO(body)
  j=[]
- for cc in cV:
-  j.append(fg(cc,k))
+ for cd in cV:
+  j.append(fg(cd,k))
  ft=z-bn
  dh=[]
  ea=0
@@ -420,7 +420,7 @@ def dH(u:str,k:str,z:int)->dict:
    dh.append(ax)
   else:
    ea+=1
- cd=len(dh)
+ ce=len(dh)
  az=0
  aa=[]
  cK={}
@@ -432,10 +432,10 @@ def dH(u:str,k:str,z:int)->dict:
     cK[ej]=True
     aa.append(ej)
  aa.sort()
- ek=(az*100)//cd if cd>0 else 0
+ ek=(az*100)//ce if ce>0 else 0
  bo=False
  bc=0
- if aO and not bH:
+ if aO and not bI:
   bo=True
   if j:
    eA=j[len(j)-1]["ts"]
@@ -445,7 +445,7 @@ def dH(u:str,k:str,z:int)->dict:
     bo=False
  elif aO:
   status,body=dx(dW(u,k,True,1))
-  if bx(status):
+  if by(status):
    bh["retry"]=True
    return bh
   if status==200:
@@ -459,30 +459,30 @@ def dH(u:str,k:str,z:int)->dict:
  eQ=w((z-bc)//86400,0,36500)if bc>0 else 0
  eb=len(j)
  cL=0
- ce=False
  cf=False
+ cg=False
  if not aO:
-  ce=False
- elif by>=0 and by>=eb:
-  cL=by
-  ce=True
+  cf=False
+ elif bz>=0 and bz>=eb:
+  cL=bz
   cf=True
+  cg=True
  else:
   cL=eb
-  ce=True
-  cf=not bH
+  cf=True
+  cg=not bI
  l={
  "retry":False,"reason":"",
  "age_days":int(eQ),"age_known":bool(bo),
  "first_tx_ts":int(bc),
- "tx_count":int(cL),"tx_count_known":bool(ce),
- "tx_count_exact":bool(cf),
+ "tx_count":int(cL),"tx_count_known":bool(cf),
+ "tx_count_exact":bool(cg),
  "balance_wei":int(bi),"balance_known":bool(aJ),
  "failed_pct":int(ek),
- "failed_known":bool(aO and(cd>0 or cf)),
- "sample_n":int(cd),"sample_full":bool(bH),
+ "failed_known":bool(aO and(ce>0 or cg)),
+ "sample_n":int(ce),"sample_full":bool(bI),
  "parties":aa,
- "parties_complete":bool(aO and not bH and ea==0),
+ "parties_complete":bool(aO and not bI and ea==0),
  "digest":"",
  }
  l["digest"]=K(json.dumps({
@@ -550,8 +550,8 @@ def dv(p:str)->dict:
  af=H(text[em:fH+1])
  if not isinstance(af,dict):
   return el
- return bW(af)
-def bW(af)->dict:
+ return bX(af)
+def bX(af)->dict:
  C=[]
  if not isinstance(af,dict):
   return{"ok":False,"conditions":[],"unverifiable":0}
@@ -573,128 +573,132 @@ def bW(af)->dict:
   if fI>0:
    C.append({"kind":eg,
    "value":dw(w(fI,1,10**24),ee)})
- W=af.get("required_interactions")
+ U=af.get("required_interactions")
  aP=[]
- if isinstance(W,list):
+ if isinstance(U,list):
   cK={}
-  for en in W:
+  for en in U:
    aA=F(en)
    if aA and aA not in cK and len(aP)<al:
     cK[aA]=True
     aP.append(aA)
  if aP:
   aP.sort()
-  C.append({"kind":bw,"value":0,"addresses":aP})
+  C.append({"kind":bx,"value":0,"addresses":aP})
  fw=af.get("max_failed_tx_pct")
  if fw is not None and not isinstance(fw,bool):
   o=f(fw,-1)
   if o>=0 and o<100:
-   C.append({"kind":cs,"value":dw(w(o,0,99),cS)})
+   C.append({"kind":ct,"value":dw(w(o,0,99),cS)})
  n=w(f(af.get("unverifiable"),0),0,am)
- if isinstance(W,list):
-  dj=w(len(W)-len(aP),0,am)
+ if isinstance(U,list):
+  dj=w(len(U)-len(aP),0,am)
   if dj>0 and n<dj:
    n=dj
  return{"ok":True,"conditions":C,
  "unverifiable":w(n,0,am)}
 def cM(N)->str:
- bz=[]
+ bA=[]
  for cN in N:
   Z=str(cN.get("kind",""))
-  if Z==bw:
-   bz.append(Z+"="+",".join(cN.get("addresses",[])))
+  if Z==bx:
+   bA.append(Z+"="+",".join(cN.get("addresses",[])))
   else:
-   bz.append(Z+"="+str(int(cN.get("value",0))))
- return";".join(bz)
-def bI(Z:str,eR:int,cX:int,status:str,cu:str,
+   bA.append(Z+"="+str(int(cN.get("value",0))))
+ return";".join(bA)
+def bJ(Z:str,eR:int,cX:int,status:str,bp:str,
 aq=None)->dict:
  C={"kind":Z,"required":int(eR),"actual":int(cX),
- "status":status,"detail":" ".join(str(cu).split())[:cG]}
+ "status":status,"detail":" ".join(str(bp).split())[:cG]}
  if aq:
-  C["missing"]=list(aq)[:bu]
+  C["missing"]=list(aq)[:bv]
  return C
 def eC(N,l,u:str)->list:
  fN=cQ.get(u,"ETH")
  j=[]
  for cN in N:
   Z=str(cN.get("kind",""))
-  W=int(cN.get("value",0))
+  U=int(cN.get("value",0))
   if Z==ef:
    if not l["age_known"]:
-    j.append(bI(Z,W,-1,ak,
+    j.append(bJ(Z,U,-1,ak,
     "The first transaction could not be read."))
    else:
-    bp=int(l["age_days"])
-    j.append(bI(Z,W,bp,
-    bm if bp>=W else bF,
-    "first transaction "+str(bp)+" days ago; "
-    +str(W)+" required"))
+    bq=int(l["age_days"])
+    if int(l["first_tx_ts"])<=0:
+     bp=("this wallet has no transactions on this chain, so "
+      "it has no age; "+str(U)+" days required")
+    else:
+     bp=("first transaction "+str(bq)+" days ago; "
+     +str(U)+" required")
+    j.append(bJ(Z,U,bq,
+    bm if bq>=U else bG,bp))
   elif Z==eK:
    if not l["tx_count_known"]:
-    j.append(bI(Z,W,-1,ak,
+    j.append(bJ(Z,U,-1,ak,
     "The transaction count could not be read."))
    else:
-    bp=int(l["tx_count"])
-    if bp>=W:
+    bq=int(l["tx_count"])
+    if bq>=U:
      status=bm
-     cu=str(bp)+" transactions; "+str(W)+" required"
+     bp=str(bq)+" transactions; "+str(U)+" required"
     elif l["tx_count_exact"]:
-     status=bF
-     cu=str(bp)+" transactions; "+str(W)+" required"
+     status=bG
+     bp=str(bq)+" transactions; "+str(U)+" required"
     else:
      status=ak
-     cu=("the explorer's counter is not usable for this "
-      "wallet; at least "+str(bp)+" transactions are "
-      "visible but "+str(W)+" is not provable")
-    j.append(bI(Z,W,bp,status,cu))
+     bp=("the explorer's counter is not usable for this "
+      "wallet; at least "+str(bq)+" transactions are "
+      "visible but "+str(U)+" is not provable")
+    j.append(bJ(Z,U,bq,status,bp))
   elif Z==eg:
    if not l["balance_known"]:
-    j.append(bI(Z,W,-1,ak,
+    j.append(bJ(Z,U,-1,ak,
     "The balance could not be read."))
    else:
-    bp=int(l["balance_wei"])
-    j.append(bI(Z,W,bp,
-    bm if bp>=W else bF,
-    "holds "+do(bp)+" "+fN+"; "
-    +do(W)+" required"))
-  elif Z==bw:
-   bq=cN.get("addresses",[])
+    bq=int(l["balance_wei"])
+    j.append(bJ(Z,U,bq,
+    bm if bq>=U else bG,
+    "holds "+do(bq)+" "+fN+"; "
+    +do(U)+" required"))
+  elif Z==bx:
+   br=cN.get("addresses",[])
    cK=l["parties"]
    aq=[]
-   for aA in bq:
+   for aA in br:
     if aA not in cK:
      aq.append(aA)
    if not aq:
-    j.append(bI(Z,len(bq),len(bq),bm,
-    "all "+str(len(bq))+" required counterparties "
+    j.append(bJ(Z,len(br),len(br),bm,
+    "all "+str(len(br))+" required counterparties "
      "appear in the sampled history"))
    elif l["parties_complete"]:
-    j.append(bI(Z,len(bq),len(bq)-len(aq),
-    bF,"never interacted with "
-    +", ".join(aq[:bu]),aq))
+    j.append(bJ(Z,len(br),len(br)-len(aq),
+    bG,"never interacted with "
+    +", ".join(aq[:bv]),aq))
    else:
-    j.append(bI(Z,len(bq),len(bq)-len(aq),
+    j.append(bJ(Z,len(br),len(br)-len(aq),
     ak,"not in the most recent "
     +str(l["sample_n"])+" transactions, and the history "
      "is longer than the sample - absence is not provable",
     aq))
-  elif Z==cs:
+  elif Z==ct:
    if not l["failed_known"]:
-    j.append(bI(Z,W,-1,ak,
+    j.append(bJ(Z,U,-1,ak,
     "The recent transactions could not be read."))
    else:
-    bp=int(l["failed_pct"])
-    j.append(bI(Z,W,bp,
-    bm if bp<=W else bF,
-    str(bp)+"% of the last "+str(l["sample_n"])
-    +" transactions failed; "+str(W)+"% allowed"))
+    bq=int(l["failed_pct"])
+    j.append(bJ(Z,U,bq,
+    bm if bq<=U else bG,
+    str(bq)+"% of the last "+str(l["sample_n"])
+    +" transactions failed; "+str(U)+"% allowed"))
  return j
 def cD(j,v:int,n:int,aQ:bool)->str:
  if not aQ:
   return L
  for ax in j:
-  if ax["status"]==bF:
-   return ca
+  if ax["status"]==bG:
+   return cb
  if v<=0:
   return L
  for ax in j:
@@ -703,9 +707,9 @@ def cD(j,v:int,n:int,aQ:bool)->str:
  if n>0:
   return L
  return ay
-def br(o)->str:
+def bs(o)->str:
  s=str(o).strip().upper()
- if s==ay or s==ca or s==L:
+ if s==ay or s==cb or s==L:
   return s
  return""
 def dk(t:str,j,n:int,aQ:bool,
@@ -716,25 +720,25 @@ v:int)->str:
  if v<=0 and n<=0:
   return("The policy states no requirement this gate can check, so it "
    "grants nothing.")
- az=[r for r in j if r["status"]==bF]
+ az=[r for r in j if r["status"]==bG]
  ec=[r for r in j if r["status"]==ak]
  cY=[r for r in j if r["status"]==bm]
- if t==ca:
+ if t==cb:
   return("Denied: "+"; ".join([str(r["detail"])for r in az[:3]])
   +". "+str(len(cY))+" of "+str(v)
   +" conditions were met.")[:Y]
  if t==ay:
   return("Granted: all "+str(v)+" conditions met - "
   +"; ".join([str(r["detail"])for r in cY[:4]])+".")[:Y]
- bz=[]
+ bA=[]
  if ec:
-  bz.append("; ".join([str(r["detail"])for r in ec[:2]]))
+  bA.append("; ".join([str(r["detail"])for r in ec[:2]]))
  if n>0:
-  bz.append(str(n)+" requirement(s) in this policy cannot "
+  bA.append(str(n)+" requirement(s) in this policy cannot "
    "be expressed as an on-chain condition")
- if not bz:
-  bz.append("the policy produced nothing checkable")
- return("Inconclusive: "+". ".join(bz)+". Access is not granted on "
+ if not bA:
+  bA.append("the policy produced nothing checkable")
+ return("Inconclusive: "+". ".join(bA)+". Access is not granted on "
   "an unproven condition.")[:Y]
 def cZ(u:str,k:str,p:str,c:int,
 z:int)->dict:
@@ -746,15 +750,15 @@ z:int)->dict:
  n=int(eo["unverifiable"])
  aQ=bool(eo["ok"])
  j=eC(N,l,u)
- bA=len(N)
+ bB=len(N)
  cE=0
  for ax in j:
   if ax["status"]==bm:
    cE+=1
- t=cD(j,bA,n,aQ)
- eW=bE(int(l["age_days"]),cq)if l["age_known"]else bb
- fx=bE(int(l["tx_count"]),cH)if l["tx_count_known"]else bb
- eX=bE(int(l["balance_wei"]),cr)if l["balance_known"]else bb
+ t=cD(j,bB,n,aQ)
+ eW=bF(int(l["age_days"]),cr)if l["age_known"]else bb
+ fx=bF(int(l["tx_count"]),cH)if l["tx_count_known"]else bb
+ eX=bF(int(l["balance_wei"]),cs)if l["balance_known"]else bb
  dp=cM(N)
  ep="|".join([
  str(int(c)),
@@ -762,7 +766,7 @@ z:int)->dict:
  k,u,
  dp,
  str(n),
- str(bA),str(cE),
+ str(bB),str(cE),
  str(eW),str(fx),str(eX),
  t,
  ])
@@ -770,7 +774,7 @@ z:int)->dict:
  "retry":False,
  "verdict":t,
  "conditions_met":cE,
- "conditions_total":bA,
+ "conditions_total":bB,
  "unverifiable":n,
  "wallet_age_bucket":eW,
  "tx_count_bucket":fx,
@@ -778,7 +782,7 @@ z:int)->dict:
  "content_hash":K(ep),
  "conditions":j,
  "conditions_text":dp,
- "reasoning":dk(t,j,n,aQ,bA),
+ "reasoning":dk(t,j,n,aQ,bB),
  "evidence_digest":str(l["digest"]),
  "flagged":av(p),
  "facts":{
@@ -799,7 +803,7 @@ def eY(ad)->str:
   return""
  if bool(ad.get("retry",False)):
   return dZ
- t=br(ad.get("verdict",""))
+ t=bs(ad.get("verdict",""))
  if not t:
   return""
  return"|".join([
@@ -814,13 +818,13 @@ def eY(ad)->str:
 def dq(ad)->bool:
  if not isinstance(ad,dict):
   return False
- t=br(ad.get("verdict",""))
+ t=bs(ad.get("verdict",""))
  if not t:
   return False
  cE=f(ad.get("conditions_met"),-1)
- bA=f(ad.get("conditions_total"),-1)
+ bB=f(ad.get("conditions_total"),-1)
  eZ=f(ad.get("unverifiable"),-1)
- if cE<0 or bA<0 or eZ<0 or cE>bA:
+ if cE<0 or bB<0 or eZ<0 or cE>bB:
   return False
  for fa in("wallet_age_bucket","tx_count_bucket","balance_bucket"):
   o=f(ad.get(fa),-1)
@@ -829,7 +833,7 @@ def dq(ad)->bool:
  if len(str(ad.get("content_hash","")))!=16:
   return False
  if t==ay:
-  if cE!=bA or bA<=0 or eZ>0:
+  if cE!=bB or bB<=0 or eZ>0:
    return False
  return True
 @gl.storage.allow
@@ -843,14 +847,14 @@ class Policy:
  p:str
  status:str
  da:u64
- bB:u64
+ bC:u64
  aD:u32
  bk:u32
- bs:u32
- bJ:u32
+ bt:u32
+ bK:u32
  P:u32
  A:u32
- bC:str
+ bD:str
  aS:u32
  ao:u32
 @gl.storage.allow
@@ -864,7 +868,7 @@ class Check:
  dr:Address
  status:str
  t:str
- bK:u64
+ bL:u64
  aT:u64
  ah:u32
  v:u32
@@ -874,31 +878,31 @@ class Check:
  aU:str
  n:u32
  aV:str
- cg:str
- bR:str
+ ci:str
  bS:str
+ bT:str
  ar:str
  aW:str
- bv:bool
+ bw:bool
  bl:u32
 class PolicyGate(gl.contract.Contract):
  db:Address
- bL:bool
+ bM:bool
  dJ:gl.storage.TreeMap[u32,Policy]
  eq:gl.storage.DynArray[u32]
  aE:u32
  x:gl.storage.DynArray[u32]
  X:gl.storage.TreeMap[u32,u32]
- bM:gl.storage.TreeMap[Address,gl.storage.DynArray[u32]]
- bX:gl.storage.TreeMap[str,gl.storage.DynArray[u32]]
+ bN:gl.storage.TreeMap[Address,gl.storage.DynArray[u32]]
+ bY:gl.storage.TreeMap[str,gl.storage.DynArray[u32]]
  eD:gl.storage.TreeMap[u32,Check]
  cv:gl.storage.DynArray[u32]
- bt:u32
- cj:gl.storage.TreeMap[u32,gl.storage.DynArray[u32]]
- ck:gl.storage.TreeMap[str,gl.storage.DynArray[u32]]
+ bu:u32
+ ck:gl.storage.TreeMap[u32,gl.storage.DynArray[u32]]
+ cl:gl.storage.TreeMap[str,gl.storage.DynArray[u32]]
  cw:gl.storage.TreeMap[str,u32]
- bY:gl.storage.TreeMap[Address,u64]
- cl:gl.storage.TreeMap[str,u64]
+ bZ:gl.storage.TreeMap[Address,u64]
+ cm:gl.storage.TreeMap[str,u64]
  aX:gl.storage.TreeMap[u32,u64]
  I:u64
  M:u64
@@ -914,9 +918,9 @@ class PolicyGate(gl.contract.Contract):
  O:u32
  def __init__(self,bd:int):
   self.db=gl.message.sender_address
-  self.bL=False
+  self.bM=False
   self.aE=u32(0)
-  self.bt=u32(0)
+  self.bu=u32(0)
   self.I=u64(aF)
   self.M=u64(aG)
   self.B=u64(au)
@@ -930,13 +934,13 @@ class PolicyGate(gl.contract.Contract):
   self.aL=u32(0)
   self.O=u32(0)
  def aC(self)->int:
-  return bP(gl.message.raw.get("datetime",""))
+  return bQ(gl.message.raw.get("datetime",""))
  def fJ(self,raw)->int:
   o=f(raw,-1)
   if o<0 or o>4294967295:
    return-1
   return o
- def U(self,c:int):
+ def V(self,c:int):
   dc=self.fJ(c)
   if dc<0:
    return None
@@ -961,9 +965,9 @@ class PolicyGate(gl.contract.Contract):
   if dK==0:
    return
   dC=dK-1
-  bU=len(self.x)-1
-  if dC!=bU:
-   fb=u32(self.x[bU])
+  bV=len(self.x)-1
+  if dC!=bV:
+   fb=u32(self.x[bV])
    self.x[dC]=fb
    self.X[fb]=u32(dC+1)
   self.x.pop()
@@ -978,7 +982,7 @@ class PolicyGate(gl.contract.Contract):
  def cy(self,c:int,k:str,z:int)->dict:
   C={"granted":False,"reason":"","check_id":-1,"verdict":"",
   "stale":False,"expired":False,"status":""}
-  b=self.U(c)
+  b=self.V(c)
   if b is None:
    C["reason"]="No policy with that id"
    return C
@@ -998,7 +1002,7 @@ class PolicyGate(gl.contract.Contract):
   C["status"]=str(a.status)
   C["stale"]=self.eF(a,b)
   C["expired"]=self.dL(a,z)
-  if str(a.status)!=cn:
+  if str(a.status)!=co:
    C["reason"]="The latest check is "+str(a.status).lower()
    return C
   if str(a.t)!=ay:
@@ -1017,25 +1021,25 @@ class PolicyGate(gl.contract.Contract):
  @gl.public.write
  def create_policy(self,di:str,bj:str,u:str,
  p:str)->str:
-  if self.bL:
+  if self.bM:
    return self.q("PolicyGate is paused; no new policies right now")
   dd=gl.message.sender_address
   z=self.aC()
-  bU=int(self.bY.get(dd,u64(0)))
+  bV=int(self.bZ.get(dd,u64(0)))
   be=int(self.I)
-  if bU and z-bU<be:
+  if bV and z-bV<be:
    return self.q("One policy per wallet per "+str(be)
-   +" seconds; "+str(be-(z-bU))+" to go")
-  ac=bT(u)
+   +" seconds; "+str(be-(z-bV))+" to go")
+  ac=bU(u)
   if not ac:
    return self.q("Chain must be one of "+", ".join(cP))
-  bZ=aw(p)
-  if bZ:
-   return self.q(bZ)
-  ci=bg(di,df)
-  if not ci:
+  ca=aw(p)
+  if ca:
+   return self.q(ca)
+  cj=bg(di,df)
+  if not cj:
    return self.q("A policy needs a name")
-  text=bg(p,V)
+  text=bg(p,W)
   if aw(text):
    return self.q("The policy text is not usable once normalised")
   aY=int(self.aE)
@@ -1043,50 +1047,50 @@ class PolicyGate(gl.contract.Contract):
   b=self.dJ.get_or_insert_default(u32(aY))
   b.c=u32(aY)
   b.cz=dd
-  b.di=ci
-  b.bj=bg(bj,bV)
+  b.di=cj
+  b.bj=bg(bj,bW)
   b.u=ac
   b.p=text
   b.status=ba
   b.da=u64(z)
-  b.bB=u64(z)
+  b.bC=u64(z)
   b.aD=u32(1)
   self.eq.append(u32(aY))
   self.eE(aY)
-  self.bM.get_or_insert_default(dd).append(u32(aY))
-  self.bX.get_or_insert_default(ac).append(u32(aY))
-  self.bY[dd]=u64(z)
+  self.bN.get_or_insert_default(dd).append(u32(aY))
+  self.bY.get_or_insert_default(ac).append(u32(aY))
+  self.bZ[dd]=u64(z)
   return json.dumps({"ok":True,"policy_id":aY,"chain":ac,
-  "name":ci,"version":1,
+  "name":cj,"version":1,
   "injection_flagged":av(text)})
  @gl.public.write
  def check_access(self,k:str,c:int)->str:
-  if self.bL:
+  if self.bM:
    return self.q("PolicyGate is paused; no new checks right now")
   z=self.aC()
   Q=F(k)
   if not Q:
    return self.q("A wallet is a 0x-prefixed 40-digit hex address")
-  b=self.U(c)
+  b=self.V(c)
   if b is None:
    return self.q("No policy with id "+str(f(c,-1)))
   if str(b.status)!=ba:
    return self.q("Policy "+str(int(b.c))+" has been deleted")
   aY=int(b.c)
   fa=self.cx(aY,Q)
-  bU=int(self.cl.get(fa,u64(0)))
+  bV=int(self.cm.get(fa,u64(0)))
   be=int(self.M)
-  if bU and z-bU<be:
+  if bV and z-bV<be:
    return self.q("This wallet was checked against this policy "
-   +str(z-bU)+"s ago; one check per "+str(be)
+   +str(z-bV)+"s ago; one check per "+str(be)
    +" seconds")
   if int(b.A)>=int(self.G):
    return self.q("Policy "+str(aY)+" already has "
    +str(int(b.A))+" unresolved checks")
-  bN=int(self.bt)
-  self.bt=u32(bN+1)
-  a=self.eD.get_or_insert_default(u32(bN))
-  a.g=u32(bN)
+  bO=int(self.bu)
+  self.bu=u32(bO+1)
+  a=self.eD.get_or_insert_default(u32(bO))
+  a.g=u32(bO)
   a.c=u32(aY)
   a.ag=u32(int(b.aD))
   a.k=Q
@@ -1094,17 +1098,17 @@ class PolicyGate(gl.contract.Contract):
   a.dr=gl.message.sender_address
   a.status=aN
   a.t=es
-  a.bK=u64(z)
+  a.bL=u64(z)
   a.ar=K(str(b.p))
-  self.cv.append(u32(bN))
-  self.cj.get_or_insert_default(u32(aY)).append(u32(bN))
-  self.ck.get_or_insert_default(
-  self.cF(str(b.u),Q)).append(u32(bN))
-  self.cl[fa]=u64(z)
+  self.cv.append(u32(bO))
+  self.ck.get_or_insert_default(u32(aY)).append(u32(bO))
+  self.cl.get_or_insert_default(
+  self.cF(str(b.u),Q)).append(u32(bO))
+  self.cm[fa]=u64(z)
   b.bk=u32(int(b.bk)+1)
   b.A=u32(int(b.A)+1)
   self.aB=u32(int(self.aB)+1)
-  return self.dM(bN,z)
+  return self.dM(bO,z)
  @gl.public.write
  def resolve_check(self,g:int)->str:
   z=self.aC()
@@ -1119,11 +1123,11 @@ class PolicyGate(gl.contract.Contract):
   a=self.J(g)
   if a is None:
    return self.q("No check with id "+str(g))
-  b=self.U(int(a.c))
+  b=self.V(int(a.c))
   if b is None:
    return self.q("The policy behind this check is missing")
   fz=int(self.aX.get(u32(g),u64(0)))
-  if fz and z-fz<co:
+  if fz and z-fz<cp:
    return self.q("A round for check "+str(g)
    +" is already in flight")
   self.aX[u32(g)]=u64(z)
@@ -1134,11 +1138,11 @@ class PolicyGate(gl.contract.Contract):
   fd=int(z)
   def leader_fn()->dict:
    return cZ(cA,cO,eG,fc,fd)
-  def validator_fn(cm)->bool:
-   if not isinstance(cm,gl.vm.Return):
+  def validator_fn(cn)->bool:
+   if not isinstance(cn,gl.vm.Return):
     leader_fn()
     return False
-   ad=cm.calldata
+   ad=cn.calldata
    if not isinstance(ad,dict):
     return False
    dN=eY(ad)
@@ -1162,14 +1166,14 @@ class PolicyGate(gl.contract.Contract):
    "reason":("The "+cA+" explorer did not answer just now "
      "(rate limited or briefly down). Nothing was decided; this "
      "check is still pending and can be resolved again shortly.")})
-  t=br(D.get("verdict",""))
+  t=bs(D.get("verdict",""))
   if not t or not dq(D):
    self.aX[u32(g)]=u64(0)
    return json.dumps({"ok":False,"retry":True,
    "check_id":g,"status":aN,
    "reason":"The validators returned no usable vector; nothing "
      "was decided and this check can be resolved again"})
-  a.status=cn
+  a.status=co
   a.t=t
   a.aT=u64(z)
   a.ag=u32(int(b.aD))
@@ -1182,31 +1186,31 @@ class PolicyGate(gl.contract.Contract):
   a.ai=u32(w(f(D.get("balance_bucket"),0),0,7))
   a.aU=str(D.get("content_hash",""))[:16]
   a.aW=str(D.get("conditions_text",""))[:at]
-  a.bR=str(D.get("reasoning",""))[:Y]
-  a.bS=str(D.get("evidence_digest",""))[:16]
-  a.bv=bool(D.get("flagged",False))
+  a.bS=str(D.get("reasoning",""))[:Y]
+  a.bT=str(D.get("evidence_digest",""))[:16]
+  a.bw=bool(D.get("flagged",False))
   a.aV=json.dumps(D.get("conditions",[]),
   separators=(",",":"))[:at]
-  a.cg=json.dumps(D.get("facts",{}),
+  a.ci=json.dumps(D.get("facts",{}),
   separators=(",",":"))[:dg]
   self.cw[self.cx(int(a.c),
   str(a.k))]=u32(g+1)
   b.A=u32(max(0,int(b.A)-1))
   if t==ay:
-   b.bs=u32(int(b.bs)+1)
+   b.bt=u32(int(b.bt)+1)
    self.S=u32(int(self.S)+1)
-  elif t==ca:
-   b.bJ=u32(int(b.bJ)+1)
+  elif t==cb:
+   b.bK=u32(int(b.bK)+1)
    self.aj=u32(int(self.aj)+1)
   else:
    b.P=u32(int(b.P)+1)
    self.E=u32(int(self.E)+1)
   eH=str(D.get("conditions_text",""))[:at]
-  dO=str(b.bC)
+  dO=str(b.bD)
   b.aS=u32(int(b.aS)+1)
   if dO and dO!=eH:
    b.ao=u32(int(b.ao)+1)
-  b.bC=eH
+  b.bD=eH
   return json.dumps({
   "ok":True,"check_id":g,"policy_id":int(a.c),
   "wallet":cO,"chain":cA,"verdict":t,
@@ -1217,22 +1221,22 @@ class PolicyGate(gl.contract.Contract):
   "tx_count_bucket":int(a.ab),
   "balance_bucket":int(a.ai),
   "content_hash":str(a.aU),
-  "reasoning":str(a.bR),
+  "reasoning":str(a.bS),
   "granted":t==ay,
   })
  @gl.public.write
  def update_policy(self,c:int,dP:str)->str:
-  b=self.U(c)
+  b=self.V(c)
   if b is None:
    return self.q("No policy with id "+str(f(c,-1)))
   if gl.message.sender_address!=b.cz:
    return self.q("Only the policy's creator can rewrite it")
   if str(b.status)!=ba:
    return self.q("This policy has been deleted")
-  bZ=aw(dP)
-  if bZ:
-   return self.q(bZ)
-  text=bg(dP,V)
+  ca=aw(dP)
+  if ca:
+   return self.q(ca)
+  text=bg(dP,W)
   if aw(text):
    return self.q("The policy text is not usable once normalised")
   if text==str(b.p):
@@ -1240,8 +1244,8 @@ class PolicyGate(gl.contract.Contract):
   z=self.aC()
   b.p=text
   b.aD=u32(int(b.aD)+1)
-  b.bB=u64(z)
-  b.bC=""
+  b.bC=u64(z)
+  b.bD=""
   b.aS=u32(0)
   b.ao=u32(0)
   return json.dumps({"ok":True,"policy_id":int(b.c),
@@ -1252,7 +1256,7 @@ class PolicyGate(gl.contract.Contract):
     "they remain readable as evidence")})
  @gl.public.write
  def delete_policy(self,c:int)->str:
-  b=self.U(c)
+  b=self.V(c)
   if b is None:
    return self.q("No policy with id "+str(f(c,-1)))
   if gl.message.sender_address!=b.cz:
@@ -1264,7 +1268,7 @@ class PolicyGate(gl.contract.Contract):
    +str(int(b.A))+" unresolved check(s); resolve "
     "or settle them first")
   b.status=dm
-  b.bB=u64(self.aC())
+  b.bC=u64(self.aC())
   self.dX(int(b.c))
   self.O=u32(int(self.O)+1)
   return json.dumps({"ok":True,"policy_id":int(b.c),
@@ -1280,25 +1284,25 @@ class PolicyGate(gl.contract.Contract):
    return self.q("Check "+str(int(a.g))+" is already "
    +str(a.status).lower())
   de=int(self.B)
-  cC=z-int(a.bK)
+  cC=z-int(a.bL)
   if cC<de:
    return self.q("Check "+str(int(a.g))+" is "
    +str(cC)+"s old; it can be settled as stalled after "
    +str(de)+"s")
-  a.status=bO
+  a.status=bP
   a.t=L
   a.aT=u64(z)
-  a.bR=("No round decided this check within the resolution "
+  a.bS=("No round decided this check within the resolution "
    "window, so it was closed as inconclusive. Nothing about the wallet "
    "was established and no access is granted.")
-  b=self.U(int(a.c))
+  b=self.V(int(a.c))
   if b is not None:
    b.A=u32(max(0,int(b.A)-1))
    b.P=u32(int(b.P)+1)
   self.aK=u32(int(self.aK)+1)
   self.E=u32(int(self.E)+1)
   return json.dumps({"ok":True,"check_id":int(a.g),
-  "status":bO,"verdict":L,
+  "status":bP,"verdict":L,
   "age_seconds":cC})
  def bf(self)->bool:
   return gl.message.sender_address==self.db
@@ -1306,8 +1310,8 @@ class PolicyGate(gl.contract.Contract):
  def set_paused(self,o:bool)->str:
   if not self.bf():
    return self.q("Only the owner can pause PolicyGate")
-  self.bL=bool(o)
-  return json.dumps({"ok":True,"paused":bool(self.bL)})
+  self.bM=bool(o)
+  return json.dumps({"ok":True,"paused":bool(self.bM)})
  @gl.public.write
  def set_params(self,I:int,M:int,
  B:int,bd:int,
@@ -1349,13 +1353,13 @@ class PolicyGate(gl.contract.Contract):
   "status":str(b.status),
   "version":int(b.aD),
   "created_at":int(b.da),
-  "updated_at":int(b.bB),
+  "updated_at":int(b.bC),
   "check_count":int(b.bk),
-  "granted_count":int(b.bs),
-  "denied_count":int(b.bJ),
+  "granted_count":int(b.bt),
+  "denied_count":int(b.bK),
   "inconclusive_count":int(b.P),
   "pending_count":int(b.A),
-  "last_parse":str(b.bC),
+  "last_parse":str(b.bD),
   "parse_runs":int(b.aS),
   "parse_changes":int(b.ao),
   "parse_stable":int(b.ao)==0 and int(b.aS)>0,
@@ -1363,7 +1367,7 @@ class PolicyGate(gl.contract.Contract):
   }
  @gl.public.view
  def get_policy(self,c:int)->str:
-  b=self.U(c)
+  b=self.V(c)
   if b is None:
    return self.q("No policy with id "+str(f(c,-1)))
   return json.dumps({"ok":True,"policy":self.aZ(b,self.aC())})
@@ -1372,12 +1376,12 @@ class PolicyGate(gl.contract.Contract):
   Q=F(fj)
   if not Q:
    return self.q("An address is 0x-prefixed and 40 hex digits")
-  dQ=self.bM.get(Address(Q))
+  dQ=self.bN.get(Address(Q))
   an=w(f(ae,20),1,R)
   z=self.aC()
   j=[]
   for aY in list(dQ)[-an:]:
-   b=self.U(int(aY))
+   b=self.V(int(aY))
    if b is not None:
     j.append(self.aZ(b,z))
   j.reverse()
@@ -1389,7 +1393,7 @@ class PolicyGate(gl.contract.Contract):
   z=self.aC()
   j=[]
   for aY in list(self.x)[-an:]:
-   b=self.U(int(aY))
+   b=self.V(int(aY))
    if b is not None:
     j.append(self.aZ(b,z))
   j.reverse()
@@ -1397,25 +1401,25 @@ class PolicyGate(gl.contract.Contract):
   "active_total":len(self.x),"policies":j})
  @gl.public.view
  def get_policies_by_chain(self,u:str,ae:int)->str:
-  Q=bT(u)
+  Q=bU(u)
   if not Q:
    return self.q("Chain must be one of "+", ".join(cP))
-  dQ=self.bX.get(Q)
+  dQ=self.bY.get(Q)
   an=w(f(ae,20),1,R)
   z=self.aC()
   j=[]
   for aY in list(dQ)[-an:]:
-   b=self.U(int(aY))
+   b=self.V(int(aY))
    if b is not None and str(b.status)==ba:
     j.append(self.aZ(b,z))
   j.reverse()
   return json.dumps({"ok":True,"chain":Q,"count":len(j),
   "policies":j})
  def aI(self,a,z:int)->dict:
-  b=self.U(int(a.c))
+  b=self.V(int(a.c))
   fC=b is not None and self.eF(a,b)
   N=H(str(a.aV))
-  l=H(str(a.cg))
+  l=H(str(a.ci))
   return{
   "check_id":int(a.g),
   "policy_id":int(a.c),
@@ -1426,7 +1430,7 @@ class PolicyGate(gl.contract.Contract):
   "requester":str(a.dr),
   "status":str(a.status),
   "verdict":str(a.t),
-  "filed_at":int(a.bK),
+  "filed_at":int(a.bL),
   "settled_at":int(a.aT),
   "stale":bool(fC),
   "expired":bool(self.dL(a,z)),
@@ -1444,9 +1448,9 @@ class PolicyGate(gl.contract.Contract):
   "conditions_text":str(a.aW),
   "conditions":N if N is not None else[],
   "facts":l if l is not None else{},
-  "reasoning":str(a.bR),
-  "evidence_digest":str(a.bS),
-  "injection_flagged":bool(a.bv),
+  "reasoning":str(a.bS),
+  "evidence_digest":str(a.bT),
+  "injection_flagged":bool(a.bw),
   }
  @gl.public.view
  def get_check(self,g:int)->str:
@@ -1460,18 +1464,18 @@ class PolicyGate(gl.contract.Contract):
   if not Q:
    return self.q("A wallet is a 0x-prefixed 40-digit hex address")
   z=self.aC()
-  bD=self.cy(f(c,-1),Q,z)
+  bE=self.cy(f(c,-1),Q,z)
   C={"ok":True,"wallet":Q,
   "policy_id":f(c,-1),
-  "granted":bool(bD["granted"]),
-  "verdict":str(bD["verdict"]),
-  "status":str(bD["status"]),
-  "stale":bool(bD["stale"]),
-  "expired":bool(bD["expired"]),
-  "reason":str(bD["reason"]),
-  "check_id":int(bD["check_id"])}
-  if int(bD["check_id"])>=0:
-   a=self.J(int(bD["check_id"]))
+  "granted":bool(bE["granted"]),
+  "verdict":str(bE["verdict"]),
+  "status":str(bE["status"]),
+  "stale":bool(bE["stale"]),
+  "expired":bool(bE["expired"]),
+  "reason":str(bE["reason"]),
+  "check_id":int(bE["check_id"])}
+  if int(bE["check_id"])>=0:
+   a=self.J(int(bE["check_id"]))
    if a is not None:
     C["check"]=self.aI(a,z)
   return json.dumps(C)
@@ -1484,15 +1488,15 @@ class PolicyGate(gl.contract.Contract):
   self.aC())["granted"])
  @gl.public.view
  def get_checks_by_policy(self,c:int,ae:int)->str:
-  b=self.U(c)
+  b=self.V(c)
   if b is None:
    return self.q("No policy with id "+str(f(c,-1)))
-  dQ=self.cj.get(u32(int(b.c)))
+  dQ=self.ck.get(u32(int(b.c)))
   an=w(f(ae,20),1,R)
   z=self.aC()
   j=[]
-  for bN in list(dQ)[-an:]:
-   a=self.J(int(bN))
+  for bO in list(dQ)[-an:]:
+   a=self.J(int(bO))
    if a is not None:
     j.append(self.aI(a,z))
   j.reverse()
@@ -1500,18 +1504,18 @@ class PolicyGate(gl.contract.Contract):
   "count":len(j),"checks":j})
  @gl.public.view
  def get_wallet_history(self,u:str,k:str,ae:int)->str:
-  ac=bT(u)
+  ac=bU(u)
   if not ac:
    return self.q("Chain must be one of "+", ".join(cP))
   Q=F(k)
   if not Q:
    return self.q("A wallet is a 0x-prefixed 40-digit hex address")
-  dQ=self.ck.get(self.cF(ac,Q))
+  dQ=self.cl.get(self.cF(ac,Q))
   an=w(f(ae,20),1,R)
   z=self.aC()
   j=[]
-  for bN in list(dQ)[-an:]:
-   a=self.J(int(bN))
+  for bO in list(dQ)[-an:]:
+   a=self.J(int(bO))
    if a is not None:
     j.append(self.aI(a,z))
   j.reverse()
@@ -1522,8 +1526,8 @@ class PolicyGate(gl.contract.Contract):
   an=w(f(ae,20),1,R)
   z=self.aC()
   j=[]
-  for bN in list(self.cv)[-an:]:
-   a=self.J(int(bN))
+  for bO in list(self.cv)[-an:]:
+   a=self.J(int(bO))
    if a is not None:
     j.append(self.aI(a,z))
   j.reverse()
@@ -1534,15 +1538,15 @@ class PolicyGate(gl.contract.Contract):
   z=self.aC()
   de=int(self.B)
   j=[]
-  for bN in list(self.cv)[-eJ:]:
-   a=self.J(int(bN))
+  for bO in list(self.cv)[-eJ:]:
+   a=self.J(int(bO))
    if a is None or str(a.status)!=aN:
     continue
-   cC=z-int(a.bK)
+   cC=z-int(a.bL)
    j.append({"check_id":int(a.g),
    "policy_id":int(a.c),
    "wallet":str(a.k),"chain":str(a.u),
-   "filed_at":int(a.bK),"age_seconds":cC,
+   "filed_at":int(a.bL),"age_seconds":cC,
    "retry_count":int(a.bl),
    "settleable":cC>=de})
    if len(j)>=an:
@@ -1566,14 +1570,14 @@ class PolicyGate(gl.contract.Contract):
   -int(self.aj)-int(self.E)),
   "grant_rate_bps":(int(self.S)*10000)//dl if dl else 0,
   "decided":dl,
-  "paused":bool(self.bL),
+  "paused":bool(self.bM),
   })
  @gl.public.view
  def get_config(self)->str:
   return json.dumps({
   "ok":True,
   "owner":str(self.db),
-  "paused":bool(self.bL),
+  "paused":bool(self.bM),
   "chains":list(cP),
   "policy_cooldown":int(self.I),
   "check_cooldown":int(self.M),
@@ -1581,7 +1585,7 @@ class PolicyGate(gl.contract.Contract):
   "check_ttl":int(self.aR),
   "check_ttl_days":int(self.aR)//86400,
   "max_pending_per_policy":int(self.G),
-  "policy_chars":[aM,V],
+  "policy_chars":[aM,W],
   "condition_kinds":list(cT),
   "sample_size":dT,
   "sample_lag_seconds":bn,
@@ -1592,16 +1596,16 @@ class PolicyGate(gl.contract.Contract):
   "age_ladder":list(cR),
   "tx_ladder":list(dn),
   "pct_ladder":list(cS),
-  "age_edges":list(cq),
+  "age_edges":list(cr),
   "tx_edges":list(cH),
-  "bal_edges":[str(e)for e in cr],
+  "bal_edges":[str(e)for e in cs],
   })
  @gl.public.view
  def verify_check(self,g:int)->str:
   a=self.J(g)
   if a is None:
    return self.q("No check with id "+str(f(g,-1)))
-  b=self.U(int(a.c))
+  b=self.V(int(a.c))
   dy=[]
   ok=True
   def note(fD:str,dR,cX)->None:
@@ -1609,13 +1613,13 @@ class PolicyGate(gl.contract.Contract):
    dy.append({"field":fD,"expected":str(dR),
    "actual":str(cX),"ok":cY})
    return None
-  if str(a.status)==bO:
+  if str(a.status)==bP:
    return json.dumps({"ok":True,"check_id":int(a.g),
-   "verified":True,"status":bO,
+   "verified":True,"status":bP,
    "note":("a stalled check carries no vector to verify; it was "
      "closed as inconclusive without a round"),
    "checks":[]})
-  if str(a.status)!=cn:
+  if str(a.status)!=co:
    return json.dumps({"ok":True,"check_id":int(a.g),
    "verified":False,"status":str(a.status),
    "note":"this check has not been decided yet","checks":[]})
@@ -1648,18 +1652,18 @@ class PolicyGate(gl.contract.Contract):
   else:
    dy.append({"field":"conditions","expected":"a list",
    "actual":"unparseable","ok":False})
-  l=H(str(a.cg))
+  l=H(str(a.ci))
   if isinstance(l,dict):
    if l.get("age_known"):
     note("wallet_age_bucket",
-    bE(f(l.get("age_days"),0),cq),
+    bF(f(l.get("age_days"),0),cr),
     int(a.T))
    if l.get("balance_known"):
     note("balance_bucket",
-    bE(f(l.get("balance_wei"),0),cr),
+    bF(f(l.get("balance_wei"),0),cs),
     int(a.ai))
    note("tx_count_bucket",
-   bE(f(l.get("tx_count"),0),cH),
+   bF(f(l.get("tx_count"),0),cH),
    int(a.ab))
   for en in dy:
    if not en["ok"]:

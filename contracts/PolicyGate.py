@@ -1235,10 +1235,20 @@ def _evaluate(conditions, facts, chain: str) -> list:
 					"The first transaction could not be read."))
 			else:
 				got = int(facts["age_days"])
+				# "first transaction 0 days ago" is what a wallet with NO first
+				# transaction used to read as, which says the opposite of what
+				# happened - it sounds like the wallet transacted today. This
+				# string is what a denied requester reads to understand the
+				# denial, so the two cases are worded apart. `first_tx_ts` is 0
+				# exactly when the explorer answered and found nothing.
+				if int(facts["first_tx_ts"]) <= 0:
+					detail = ("this wallet has no transactions on this chain, so "
+						"it has no age; " + str(want) + " days required")
+				else:
+					detail = ("first transaction " + str(got) + " days ago; "
+						+ str(want) + " required")
 				rows.append(_row(kind, want, got,
-					R_PASS if got >= want else R_FAIL,
-					"first transaction " + str(got) + " days ago; "
-					+ str(want) + " required"))
+					R_PASS if got >= want else R_FAIL, detail))
 
 		elif kind == K_TX:
 			if not facts["tx_count_known"]:
