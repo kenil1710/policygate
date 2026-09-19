@@ -25,6 +25,21 @@ import { connect, argOf, returnedJson, sleep } from "./harness.mjs";
 const networkName = argOf("network", "studiodev");
 const rounds = Number(argOf("rounds", "3"));
 const gapSeconds = Number(argOf("gap", "60"));
+/*
+ * HOW MANY CHECKS TO TRY PER ROUND, and why there is a limit at all.
+ *
+ * Measured while draining a seed: every resolve attempt costs one v1 request
+ * PER VALIDATOR, so a round that retries nine checks spends forty-five against
+ * the exact quota it is waiting on. The validators' egress makes roughly five
+ * times the requests a laptop does, and a short loop over the whole backlog
+ * holds their quota exhausted indefinitely — the retry becomes the thing
+ * preventing recovery.
+ *
+ * So a round takes a bounded bite and the gap does the work. Draining slowly is
+ * strictly faster than draining greedily here, which is not obvious and is why
+ * it is written down.
+ */
+const perRound = Number(argOf("max-per-round", "3"));
 const alsoSettle = process.argv.includes("--settle");
 
 const deployments = JSON.parse(readFileSync(new URL("../deployments.json", import.meta.url), "utf8"));
@@ -43,8 +58,9 @@ for (let round = 1; round <= rounds; round++) {
     console.log(`  round ${round}: nothing pending`);
     break;
   }
-  console.log(`  round ${round}: ${pending.length} pending`);
-  for (const p of pending) {
+  const batch = pending.slice(0, Math.max(1, perRound));
+  console.log(`  round ${round}: ${pending.length} pending, trying ${batch.length}`);
+  for (const p of batch) {
     const { returned } = await c.send("resolve_check", [p.check_id]);
     const body = returnedJson(returned);
     // STATE is the authority: a settled transaction is not a decided check.
@@ -63,7 +79,7 @@ for (let round = 1; round <= rounds; round++) {
     }
   }
   if (round < rounds) {
-    console.log(`    waiting ${gapSeconds}s for the explorers to forgive us`);
+    console.log(`    waiting ${gapSeconds}s — the quota only recovers while nobody is spending it`);
     await sleep(gapSeconds * 1000);
   }
 }
