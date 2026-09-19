@@ -2429,7 +2429,14 @@ class PolicyGate(gl.contract.Contract):
 			"last_parse": str(policy.last_parse),
 			"parse_runs": int(policy.parse_runs),
 			"parse_changes": int(policy.parse_changes),
-			"parse_stable": int(policy.parse_changes) == 0 and int(policy.parse_runs) > 0,
+			# THREE STATES, NOT TWO, for the same reason bucket 0 is reserved
+			# for "not known": a policy nobody has checked yet has not been read
+			# inconsistently, it has not been read at all, and a bare `false`
+			# says the first. A reader deciding whether to trust a gate would be
+			# told the policy is ambiguous when nothing is known about it either
+			# way.
+			"parse_stable": (None if int(policy.parse_runs) == 0
+				else int(policy.parse_changes) == 0),
 			"injection_flagged": _injection_seen(str(policy.policy_text)),
 		}
 

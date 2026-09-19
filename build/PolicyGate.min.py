@@ -1373,7 +1373,8 @@ class PolicyGate(gl.contract.Contract):
   "last_parse":str(b.bD),
   "parse_runs":int(b.aS),
   "parse_changes":int(b.ao),
-  "parse_stable":int(b.ao)==0 and int(b.aS)>0,
+  "parse_stable":(None if int(b.aS)==0
+  else int(b.ao)==0),
   "injection_flagged":av(str(b.p)),
   }
  @gl.public.view

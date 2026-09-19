@@ -40,13 +40,20 @@ print(f"  contract   {addr}")
 print(f"  owner      {dep.get('owner')}")
 print(f"  artifact   {dep.get('artifact_bytes'):,} bytes  deployed {dep.get('deployed_at')}")
 
-art = (doc.get("artifacts") or {}).get("build/PolicyGate.min.py") or {}
 import hashlib
 here = hashlib.sha256(open("build/PolicyGate.min.py","rb").read()).hexdigest()
-same = here == art.get("sha256")
-print(f"  checksum   {'MATCHES' if same else 'DIFFERS FROM'} the recorded artifact  ({here[:16]}…)")
-if not same:
-    print("             the deployed bytes are not what this tree now builds")
+on_chain = dep.get("artifact_sha256")
+# TWO DIFFERENT QUESTIONS, and conflating them hides the interesting one.
+#   1. do the bytes this tree builds match what was deployed?
+#   2. if not, has the SOURCE moved on since — which is ordinary — or is the
+#      deployment of unknown provenance, which is not?
+if not on_chain:
+    print(f"  checksum   this tree builds {here[:16]}…; no deployed checksum recorded")
+elif here == on_chain:
+    print(f"  checksum   MATCHES the deployed artifact  ({here[:16]}…)")
+else:
+    print(f"  checksum   this tree builds {here[:16]}…, the chain holds {on_chain[:16]}…")
+    print("             the source has moved on since this deploy — redeploy to realign")
 
 
 try:

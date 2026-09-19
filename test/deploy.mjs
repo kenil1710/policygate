@@ -15,6 +15,7 @@
  * contract. It can never decide a verdict; see contracts/NOTES.md §5.
  */
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { createClient, createAccount } from "genlayer-js";
 import { CHAINS, argOf, outcomeOf, contractAddressOf, fundOnStudio, retry, sleep } from "./harness.mjs";
 import { resolveSigner } from "./keystore.mjs";
@@ -134,6 +135,11 @@ doc.deployments[networkName] = {
   PolicyGate: { address },
   owner: cfg.owner,
   artifact_bytes: code.length,
+  // The checksum OF THE BYTES THAT WENT ON CHAIN, recorded here rather than
+  // inferred later from whatever the tree happens to build now. Without it,
+  // "the artifact differs" cannot be told apart from "the source moved on since
+  // the deploy" — and those call for opposite responses.
+  artifact_sha256: createHash("sha256").update(code).digest("hex"),
   deployed_at: new Date().toISOString(),
 };
 writeFileSync(path, JSON.stringify(doc, null, 2) + "\n");

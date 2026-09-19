@@ -3439,6 +3439,31 @@ class TestViews(unittest.TestCase):
 		self.assertEqual(p["parse_changes"], 0)
 		self.assertTrue(p["parse_stable"])
 
+	def test_an_unread_policy_reports_stability_as_UNKNOWN_not_false(self):
+		"""Same reason bucket 0 is reserved for "not known". A policy nobody has
+		checked yet has not been read inconsistently — it has not been read at
+		all, and a bare `false` says the first. A reader deciding whether to
+		trust a gate would be told the policy is ambiguous when nothing is known
+		about it either way."""
+		c = C()
+		pid = ready(c)
+		p = jcall(c, "get_policy", pid)["policy"]
+		self.assertEqual(p["parse_runs"], 0)
+		self.assertIsNone(p["parse_stable"])
+		self.assertNotEqual(p["parse_stable"], False)
+
+	def test_a_policy_read_inconsistently_reports_stability_as_false(self):
+		"""And the third state is still reachable and still means what it says."""
+		c = C()
+		pid = ready(c)
+		jcall(c, "check_access", WALLET, pid)
+		call(c, "set_params", 0, 0, 3600, 30, 25, sender=OWNER)
+		MODEL["reply"] = parse_reply(age=365, txs=1000)
+		grant_setup(wallet=WALLET2)
+		jcall(c, "check_access", WALLET2, pid)
+		p = jcall(c, "get_policy", pid)["policy"]
+		self.assertIs(p["parse_stable"], False)
+
 	def test_a_policy_read_two_different_ways_is_recorded_as_unstable(self):
 		c = C()
 		pid = ready(c)
