@@ -26,7 +26,7 @@
     "first_transaction": "/api?module=account&action=txlist&sort=asc&page=1&offset=1 — read ONLY when the v2 page came back full; see docs/PROBE.md §4"
   },
   "verification": {
-    "offline_tests": 393,
+    "offline_tests": 398,
     "checklist_items": 79,
     "fixtures": "test/fixtures.json — 71 verbatim Blockscout bodies from four live hosts, gzipped, byte-identical after decoding",
     "artifact_is_tested": "the whole battery re-runs through build/PolicyGate.min.py via the emitted name map"
@@ -44,11 +44,11 @@
     "studiodev": {
       "network": "studiodev",
       "PolicyGate": {
-        "address": "0xCd0865Ce2c7bC04038c1aA6dB24A3c52c824E63F"
+        "address": "0xB0F8bE23f9Ae0f53D818D0b9C68F6641c22500A4"
       },
       "owner": "0x2201ae2E777BFa1341bf4fED12bf7b56257614Ca",
-      "artifact_bytes": 44076,
-      "deployed_at": "2026-09-19T06:26:15.692Z",
+      "artifact_bytes": 44090,
+      "deployed_at": "2026-09-21T10:05:57.988Z",
       "config": {
         "chains": [
           "ethereum",
@@ -80,8 +80,8 @@
           "version": 1,
           "policy_text": "To pass this gate the wallet must be at least one year old measured from its very first transaction, must have made at least 100 transactions, must hold at least 0.01 ETH, and no more than 25 percent of its recent transactions may have failed.",
           "checks": 3,
-          "granted": 2,
-          "denied": 1,
+          "granted": 1,
+          "denied": 2,
           "inconclusive": 0,
           "pending": 0,
           "last_parse": "wallet_age_days=365;min_tx_count=100;min_balance=10000000000000000;max_failed_tx_pct=25",
@@ -175,13 +175,13 @@
           "unverifiable": 0,
           "conditions_text": "wallet_age_days=30;min_tx_count=5;min_balance=1000000000000000000;max_failed_tx_pct=40",
           "conditions": [
-            "wallet_age_days: PASS — first transaction 943 days ago; 30 required",
+            "wallet_age_days: PASS — first transaction 945 days ago; 30 required",
             "min_tx_count: PASS — 25 transactions; 5 required",
             "min_balance: PASS — holds 22.047926 POL; 1 required",
             "max_failed_tx_pct: PASS — 0% of the last 25 transactions failed; 40% allowed"
           ],
           "facts": {
-            "age_days": 943,
+            "age_days": 945,
             "age_known": true,
             "balance_known": true,
             "balance_wei": "22047926785547615012",
@@ -192,8 +192,8 @@
             "tx_count": 25,
             "tx_count_exact": true
           },
-          "reasoning": "Granted: all 4 conditions met - first transaction 943 days ago; 30 required; 25 transactions; 5 required; holds 22.047926 POL; 1 required; 0% of the last 25 transactions failed; 40% allowed.",
-          "evidence_digest": "67c54e01ee0e0f09",
+          "reasoning": "Granted: all 4 conditions met - first transaction 945 days ago; 30 required; 25 transactions; 5 required; holds 22.047926 POL; 1 required; 0% of the last 25 transactions failed; 40% allowed.",
+          "evidence_digest": "37e335a7519485bf",
           "stale": false,
           "retries": 0
         },
@@ -217,12 +217,12 @@
           "unverifiable": 0,
           "conditions_text": "wallet_age_days=90;min_tx_count=50;max_failed_tx_pct=20",
           "conditions": [
-            "wallet_age_days: PASS — first transaction 1257 days ago; 90 required",
+            "wallet_age_days: PASS — first transaction 1259 days ago; 90 required",
             "min_tx_count: FAIL — 23 transactions; 50 required",
             "max_failed_tx_pct: PASS — 0% of the last 23 transactions failed; 20% allowed"
           ],
           "facts": {
-            "age_days": 1257,
+            "age_days": 1259,
             "age_known": true,
             "balance_known": true,
             "balance_wei": "198317331469363494",
@@ -234,7 +234,7 @@
             "tx_count_exact": true
           },
           "reasoning": "Denied: 23 transactions; 50 required. 2 of 3 conditions were met.",
-          "evidence_digest": "a1f1aaa42808938f",
+          "evidence_digest": "fe0a241b3a5aca99",
           "stale": false,
           "retries": 0
         },
@@ -299,13 +299,13 @@
           "unverifiable": 0,
           "conditions_text": "wallet_age_days=30;min_tx_count=5;min_balance=1000000000000000000;max_failed_tx_pct=40",
           "conditions": [
-            "wallet_age_days: PASS — first transaction 1103 days ago; 30 required",
+            "wallet_age_days: PASS — first transaction 1105 days ago; 30 required",
             "min_tx_count: PASS — 7625 transactions; 5 required",
             "min_balance: PASS — holds 592.719767 POL; 1 required",
             "max_failed_tx_pct: PASS — 0% of the last 50 transactions failed; 40% allowed"
           ],
           "facts": {
-            "age_days": 1103,
+            "age_days": 1105,
             "age_known": true,
             "balance_known": true,
             "balance_wei": "592719767156688654977",
@@ -316,10 +316,10 @@
             "tx_count": 7625,
             "tx_count_exact": true
           },
-          "reasoning": "Granted: all 4 conditions met - first transaction 1103 days ago; 30 required; 7625 transactions; 5 required; holds 592.719767 POL; 1 required; 0% of the last 50 transactions failed; 40% allowed.",
-          "evidence_digest": "cb80be7f7fb123d5",
+          "reasoning": "Granted: all 4 conditions met - first transaction 1105 days ago; 30 required; 7625 transactions; 5 required; holds 592.719767 POL; 1 required; 0% of the last 50 transactions failed; 40% allowed.",
+          "evidence_digest": "045b2a9cad6e2523",
           "stale": false,
-          "retries": 5
+          "retries": 0
         },
         {
           "check_id": 4,
@@ -341,12 +341,12 @@
           "unverifiable": 0,
           "conditions_text": "wallet_age_days=90;min_tx_count=50;max_failed_tx_pct=20",
           "conditions": [
-            "wallet_age_days: PASS — first transaction 1756 days ago; 90 required",
+            "wallet_age_days: PASS — first transaction 1758 days ago; 90 required",
             "min_tx_count: PASS — 11602 transactions; 50 required",
             "max_failed_tx_pct: PASS — 0% of the last 50 transactions failed; 20% allowed"
           ],
           "facts": {
-            "age_days": 1756,
+            "age_days": 1758,
             "age_known": true,
             "balance_known": true,
             "balance_wei": "159136244717382839",
@@ -357,8 +357,8 @@
             "tx_count": 11602,
             "tx_count_exact": true
           },
-          "reasoning": "Granted: all 3 conditions met - first transaction 1756 days ago; 90 required; 11602 transactions; 50 required; 0% of the last 50 transactions failed; 20% allowed.",
-          "evidence_digest": "79d9575456afba72",
+          "reasoning": "Granted: all 3 conditions met - first transaction 1758 days ago; 90 required; 11602 transactions; 50 required; 0% of the last 50 transactions failed; 20% allowed.",
+          "evidence_digest": "139a346ce1b29a4c",
           "stale": false,
           "retries": 0
         },
@@ -382,13 +382,13 @@
           "unverifiable": 0,
           "conditions_text": "wallet_age_days=180;min_tx_count=10;min_balance=1000000000000000;max_failed_tx_pct=50",
           "conditions": [
-            "wallet_age_days: PASS — first transaction 1137 days ago; 180 required",
+            "wallet_age_days: PASS — first transaction 1139 days ago; 180 required",
             "min_tx_count: PASS — 50 transactions; 10 required",
             "min_balance: PASS — holds 3.128769 ETH; 0.001 required",
             "max_failed_tx_pct: PASS — 0% of the last 50 transactions failed; 50% allowed"
           ],
           "facts": {
-            "age_days": 1137,
+            "age_days": 1139,
             "age_known": true,
             "balance_known": true,
             "balance_wei": "3128769939006604394",
@@ -399,10 +399,10 @@
             "tx_count": 50,
             "tx_count_exact": false
           },
-          "reasoning": "Granted: all 4 conditions met - first transaction 1137 days ago; 180 required; 50 transactions; 10 required; holds 3.128769 ETH; 0.001 required; 0% of the last 50 transactions failed; 50% allowed.",
-          "evidence_digest": "e8dded56678b6dd3",
+          "reasoning": "Granted: all 4 conditions met - first transaction 1139 days ago; 180 required; 50 transactions; 10 required; holds 3.128769 ETH; 0.001 required; 0% of the last 50 transactions failed; 50% allowed.",
+          "evidence_digest": "014efcf58fdf5761",
           "stale": false,
-          "retries": 5
+          "retries": 0
         },
         {
           "check_id": 6,
@@ -424,13 +424,13 @@
           "unverifiable": 0,
           "conditions_text": "wallet_age_days=180;min_tx_count=10;min_balance=1000000000000000;max_failed_tx_pct=50",
           "conditions": [
-            "wallet_age_days: PASS — first transaction 1154 days ago; 180 required",
+            "wallet_age_days: PASS — first transaction 1156 days ago; 180 required",
             "min_tx_count: PASS — 50 transactions; 10 required",
             "min_balance: PASS — holds 0.009976 ETH; 0.001 required",
             "max_failed_tx_pct: PASS — 2% of the last 50 transactions failed; 50% allowed"
           ],
           "facts": {
-            "age_days": 1154,
+            "age_days": 1156,
             "age_known": true,
             "balance_known": true,
             "balance_wei": "9976650767481597",
@@ -441,10 +441,10 @@
             "tx_count": 50,
             "tx_count_exact": false
           },
-          "reasoning": "Granted: all 4 conditions met - first transaction 1154 days ago; 180 required; 50 transactions; 10 required; holds 0.009976 ETH; 0.001 required; 2% of the last 50 transactions failed; 50% allowed.",
-          "evidence_digest": "07aa306d53bf2a26",
+          "reasoning": "Granted: all 4 conditions met - first transaction 1156 days ago; 180 required; 50 transactions; 10 required; holds 0.009976 ETH; 0.001 required; 2% of the last 50 transactions failed; 50% allowed.",
+          "evidence_digest": "a9c5df5e0f8b5ff8",
           "stale": false,
-          "retries": 5
+          "retries": 0
         },
         {
           "check_id": 7,
@@ -466,13 +466,13 @@
           "unverifiable": 0,
           "conditions_text": "wallet_age_days=30;min_tx_count=5;min_balance=1000000000000000000;max_failed_tx_pct=40",
           "conditions": [
-            "wallet_age_days: PASS — first transaction 1733 days ago; 30 required",
+            "wallet_age_days: PASS — first transaction 1735 days ago; 30 required",
             "min_tx_count: PASS — 50 transactions; 5 required",
             "min_balance: FAIL — holds 0 POL; 1 required",
             "max_failed_tx_pct: FAIL — 60% of the last 50 transactions failed; 40% allowed"
           ],
           "facts": {
-            "age_days": 1733,
+            "age_days": 1735,
             "age_known": true,
             "balance_known": true,
             "balance_wei": "0",
@@ -484,9 +484,9 @@
             "tx_count_exact": false
           },
           "reasoning": "Denied: holds 0 POL; 1 required; 60% of the last 50 transactions failed; 40% allowed. 2 of 4 conditions were met.",
-          "evidence_digest": "def84bb16e733924",
+          "evidence_digest": "26b831e8b5ba6d44",
           "stale": false,
-          "retries": 5
+          "retries": 10
         },
         {
           "check_id": 8,
@@ -508,12 +508,12 @@
           "unverifiable": 0,
           "conditions_text": "wallet_age_days=90;min_tx_count=50;max_failed_tx_pct=20",
           "conditions": [
-            "wallet_age_days: PASS — first transaction 1935 days ago; 90 required",
+            "wallet_age_days: PASS — first transaction 1937 days ago; 90 required",
             "min_tx_count: PASS — 516 transactions; 50 required",
             "max_failed_tx_pct: FAIL — 50% of the last 50 transactions failed; 20% allowed"
           ],
           "facts": {
-            "age_days": 1935,
+            "age_days": 1937,
             "age_known": true,
             "balance_known": true,
             "balance_wei": "0",
@@ -525,9 +525,9 @@
             "tx_count_exact": true
           },
           "reasoning": "Denied: 50% of the last 50 transactions failed; 20% allowed. 2 of 3 conditions were met.",
-          "evidence_digest": "eb2af632a32f3422",
+          "evidence_digest": "623672e0a5340862",
           "stale": false,
-          "retries": 5
+          "retries": 10
         },
         {
           "check_id": 9,
@@ -542,34 +542,34 @@
             "conditions_met": 4,
             "conditions_total": 4,
             "wallet_age_bucket": 7,
-            "tx_count_bucket": 5,
+            "tx_count_bucket": 4,
             "balance_bucket": 7,
-            "content_hash": "b649600a4f776ae7"
+            "content_hash": "60f08ac0f3919c58"
           },
           "unverifiable": 0,
           "conditions_text": "wallet_age_days=180;min_tx_count=10;min_balance=1000000000000000;max_failed_tx_pct=50",
           "conditions": [
-            "wallet_age_days: PASS — first transaction 1184 days ago; 180 required",
-            "min_tx_count: PASS — 782 transactions; 10 required",
-            "min_balance: PASS — holds 237719.182053 ETH; 0.001 required",
-            "max_failed_tx_pct: PASS — 7% of the last 13 transactions failed; 50% allowed"
+            "wallet_age_days: PASS — first transaction 1186 days ago; 180 required",
+            "min_tx_count: PASS — 50 transactions; 10 required",
+            "min_balance: PASS — holds 238740.946259 ETH; 0.001 required",
+            "max_failed_tx_pct: PASS — 0% of the last 16 transactions failed; 50% allowed"
           ],
           "facts": {
-            "age_days": 1184,
+            "age_days": 1186,
             "age_known": true,
             "balance_known": true,
-            "balance_wei": "237719182053830426347793",
-            "failed_pct": 7,
+            "balance_wei": "238740946259628817305052",
+            "failed_pct": 0,
             "first_tx_ts": 1687460013,
             "sample_full": true,
-            "sample_n": 13,
-            "tx_count": 782,
-            "tx_count_exact": true
+            "sample_n": 16,
+            "tx_count": 50,
+            "tx_count_exact": false
           },
-          "reasoning": "Granted: all 4 conditions met - first transaction 1184 days ago; 180 required; 782 transactions; 10 required; holds 237719.182053 ETH; 0.001 required; 7% of the last 13 transactions failed; 50% allowed.",
-          "evidence_digest": "45c2a924a32a1de0",
+          "reasoning": "Granted: all 4 conditions met - first transaction 1186 days ago; 180 required; 50 transactions; 10 required; holds 238740.946259 ETH; 0.001 required; 0% of the last 16 transactions failed; 50% allowed.",
+          "evidence_digest": "d7c19207f31218ab",
           "stale": false,
-          "retries": 8
+          "retries": 9
         },
         {
           "check_id": 10,
@@ -591,27 +591,27 @@
           "unverifiable": 0,
           "conditions_text": "wallet_age_days=365;min_tx_count=100;min_balance=10000000000000000;max_failed_tx_pct=25",
           "conditions": [
-            "wallet_age_days: PASS — first transaction 4008 days ago; 365 required",
-            "min_tx_count: PASS — 78353 transactions; 100 required",
-            "min_balance: PASS — holds 6.712597 ETH; 0.01 required",
+            "wallet_age_days: PASS — first transaction 4011 days ago; 365 required",
+            "min_tx_count: PASS — 78354 transactions; 100 required",
+            "min_balance: PASS — holds 6.712603 ETH; 0.01 required",
             "max_failed_tx_pct: PASS — 2% of the last 50 transactions failed; 25% allowed"
           ],
           "facts": {
-            "age_days": 4008,
+            "age_days": 4011,
             "age_known": true,
             "balance_known": true,
-            "balance_wei": "6712597953701629485",
+            "balance_wei": "6712603153701629485",
             "failed_pct": 2,
             "first_tx_ts": 1443428683,
             "sample_full": true,
             "sample_n": 50,
-            "tx_count": 78353,
+            "tx_count": 78354,
             "tx_count_exact": true
           },
-          "reasoning": "Granted: all 4 conditions met - first transaction 4008 days ago; 365 required; 78353 transactions; 100 required; holds 6.712597 ETH; 0.01 required; 2% of the last 50 transactions failed; 25% allowed.",
-          "evidence_digest": "8fb655ebdcc819d6",
+          "reasoning": "Granted: all 4 conditions met - first transaction 4011 days ago; 365 required; 78354 transactions; 100 required; holds 6.712603 ETH; 0.01 required; 2% of the last 50 transactions failed; 25% allowed.",
+          "evidence_digest": "cd04e25846fcdb7b",
           "stale": false,
-          "retries": 5
+          "retries": 0
         },
         {
           "check_id": 11,
@@ -662,40 +662,40 @@
           "wallet": "0x28c6c06298d514db089934071355e5743bf21d60",
           "chain": "ethereum",
           "status": "SETTLED",
-          "verdict": "GRANTED",
+          "verdict": "DENIED",
           "vector": {
-            "verdict": "GRANTED",
-            "conditions_met": 4,
+            "verdict": "DENIED",
+            "conditions_met": 3,
             "conditions_total": 4,
             "wallet_age_bucket": 7,
-            "tx_count_bucket": 6,
+            "tx_count_bucket": 5,
             "balance_bucket": 7,
-            "content_hash": "bf49a045fb0d3b9c"
+            "content_hash": "72786b4a7e563b02"
           },
           "unverifiable": 0,
           "conditions_text": "wallet_age_days=365;min_tx_count=100;min_balance=10000000000000000;max_failed_tx_pct=25",
           "conditions": [
-            "wallet_age_days: PASS — first transaction 1976 days ago; 365 required",
-            "min_tx_count: PASS — 1171 transactions; 100 required",
-            "min_balance: PASS — holds 171353.452128 ETH; 0.01 required",
-            "max_failed_tx_pct: PASS — 0% of the last 0 transactions failed; 25% allowed"
+            "wallet_age_days: PASS — first transaction 1978 days ago; 365 required",
+            "min_tx_count: PASS — 742 transactions; 100 required",
+            "min_balance: PASS — holds 155026.925959 ETH; 0.01 required",
+            "max_failed_tx_pct: FAIL — 100% of the last 3 transactions failed; 25% allowed"
           ],
           "facts": {
-            "age_days": 1976,
+            "age_days": 1978,
             "age_known": true,
             "balance_known": true,
-            "balance_wei": "171353452128767224746805",
-            "failed_pct": 0,
+            "balance_wei": "155026925959560825362178",
+            "failed_pct": 100,
             "first_tx_ts": 1619073240,
             "sample_full": true,
-            "sample_n": 0,
-            "tx_count": 1171,
+            "sample_n": 3,
+            "tx_count": 742,
             "tx_count_exact": true
           },
-          "reasoning": "Granted: all 4 conditions met - first transaction 1976 days ago; 365 required; 1171 transactions; 100 required; holds 171353.452128 ETH; 0.01 required; 0% of the last 0 transactions failed; 25% allowed.",
-          "evidence_digest": "09afa03e98deca61",
+          "reasoning": "Denied: 100% of the last 3 transactions failed; 25% allowed. 3 of 4 conditions were met.",
+          "evidence_digest": "7fae90091d73ff4b",
           "stale": false,
-          "retries": 5
+          "retries": 0
         },
         {
           "check_id": 13,
@@ -717,26 +717,26 @@
           "unverifiable": 2,
           "conditions_text": "wallet_age_days=730;min_tx_count=500;min_balance=50000000000000000",
           "conditions": [
-            "wallet_age_days: PASS — first transaction 4008 days ago; 730 required",
-            "min_tx_count: PASS — 78353 transactions; 500 required",
-            "min_balance: PASS — holds 6.712597 ETH; 0.05 required"
+            "wallet_age_days: PASS — first transaction 4011 days ago; 730 required",
+            "min_tx_count: PASS — 78354 transactions; 500 required",
+            "min_balance: PASS — holds 6.712603 ETH; 0.05 required"
           ],
           "facts": {
-            "age_days": 4008,
+            "age_days": 4011,
             "age_known": true,
             "balance_known": true,
-            "balance_wei": "6712597953701629485",
+            "balance_wei": "6712603153701629485",
             "failed_pct": 2,
             "first_tx_ts": 1443428683,
             "sample_full": true,
             "sample_n": 50,
-            "tx_count": 78353,
+            "tx_count": 78354,
             "tx_count_exact": true
           },
           "reasoning": "Inconclusive: 2 requirement(s) in this policy cannot be expressed as an on-chain condition. Access is not granted on an unproven condition.",
-          "evidence_digest": "8fb655ebdcc819d6",
+          "evidence_digest": "cd04e25846fcdb7b",
           "stale": false,
-          "retries": 6
+          "retries": 3
         },
         {
           "check_id": 14,
@@ -825,20 +825,34 @@
         "policies_active": 5,
         "policies_created": 6,
         "checks_filed": 16,
-        "granted": 8,
-        "denied": 7,
+        "granted": 7,
+        "denied": 8,
         "inconclusive": 1,
         "stalled": 0,
         "pending": 0,
-        "retries": 49,
+        "retries": 32,
         "decided": 15,
-        "grant_rate_bps": 5333
+        "grant_rate_bps": 4666
       },
-      "recorded_at": "2026-09-19T08:23:15.250Z",
-      "artifact_sha256": "282d33855b525030d6caf9f72b0fe1fafdf8731942ef5934c4f8a420397e12dc",
-      "artifact_source_commit": "6e7f9412",
-      "artifact_source_commit_last": "524b7f76",
-      "artifact_note": "The bytes on chain are reproducible: `git checkout 6e7f9412 && bash tools/build.sh` produces build/PolicyGate.min.py with sha256 282d33855b525030... byte for byte. HEAD carries one later change that touches the artifact — parse_stable became tri-state (null/true/false) so a policy nobody has checked yet stops reporting itself as unstable. It is a view field only; no verdict, vector, storage shape or ABI moved. The deployment was kept rather than realigned because it holds 16 decided checks that took an afternoon of scarce explorer quota to produce, and tools/audit.sh reports the divergence rather than hiding it."
+      "recorded_at": "2026-09-21T11:04:20.941Z",
+      "artifact_sha256": "e56dfc93b681611ec5fe43071a15c72f70feadfa7dddd75808f9a1a8a751e0ee",
+      "artifact_source_commit": "93ada5c9",
+      "artifact_source_commit_last": "93ada5c9",
+      "artifact_note": "The deployed bytes ARE the reviewed source, and that is checkable rather than asserted: `python3 tools/verify_onchain.py 0xB0F8bE23f9Ae0f53D818D0b9C68F6641c22500A4 build/PolicyGate.min.py` reads the code back off the chain with `genlayer code` and answers MATCH on sha256 e56dfc93b681611e... - not EQUIVALENT-under-renaming, the same bytes. `git checkout 93ada5c9 && bash tools/build.sh` reproduces them; contracts/PolicyGate.py and build/PolicyGate.min.py last changed in ae90abea, so every commit from there to HEAD builds this artifact. The source has not moved since this deploy, which is why the two commit fields above are equal.",
+      "verified": {
+        "method": "genlayer code <address> -> strip CLI chrome -> sha256, via tools/verify_onchain.py",
+        "result": "MATCH",
+        "sha256": "e56dfc93b681611ec5fe43071a15c72f70feadfa7dddd75808f9a1a8a751e0ee",
+        "at": "2026-09-21T11:04:45Z",
+        "live_behaviour": "get_policy on all five policies answered parse_stable: null with parse_runs: 0 at 2026-09-21T10:06:52Z - after the policies were created and before any check had run. That is the tri-state the review asked for, observed on the deployment rather than in the diff."
+      },
+      "supersedes": {
+        "address": "0xCd0865Ce2c7bC04038c1aA6dB24A3c52c824E63F",
+        "artifact_sha256": "282d33855b525030d6caf9f72b0fe1fafdf8731942ef5934c4f8a420397e12dc",
+        "artifact_source_commit": "6e7f9412",
+        "deployed_at": "2026-09-19T06:26:15.692Z",
+        "why": "Rejected in review for a source mismatch: it answered parse_stable: false for a policy nobody had checked yet, where the GitHub source answers null. It was one commit behind on a view field - no verdict, vector, storage shape or ABI differed - and it was kept rather than realigned because it held 16 decided checks. The record is left here because those checks and that decision are part of this project's history, but the rule now is that what is submitted is what is on chain. See contracts/NOTES.md 13."
+      }
     }
   }
 }

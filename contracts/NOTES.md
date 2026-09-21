@@ -528,3 +528,60 @@ transactions failed" — so nobody reading a check can mistake it for a lifetime
 figure. A wallet could in principle keep a clean recent window over a bad history.
 Widening it means paginating, and `docs/PROBE.md` §2 is the measurement that says
 what a page costs.
+
+The redeploy measured how small that sample can get. Binance 14 against
+*Ethereum Veteran* PASSED this condition on the first live run and FAILED it on
+the second — same policy text, same wallet, same four conditions. The page came
+back full, the five-minute lag window dropped all but **three** rows of it, and
+all three had failed: 100% against a 25% allowance. So a wallet 1,978 days old,
+with 742 transactions and 155,026 ETH, is DENIED on a sample of three. Nothing
+was misread — every number on that check is correct, and `sample_n: 3` is stored
+on it. The wallet is simply busy enough that 47 of its last 50 transactions were
+younger than the lag window.
+
+The fix is a **minimum sample size**: `max_failed_tx_pct` should answer UNKNOWN
+below roughly ten rows, which by §5 makes the check INCONCLUSIVE rather than
+DENIED — "we could not read enough to say" rather than "you failed". It is
+deliberately NOT made here. This build exists to put the reviewed source on
+chain byte for byte (§13); shipping an evaluation change in the same artifact
+would place a second, unreviewed difference on the deployment being submitted.
+It is the first change to make after.
+
+---
+
+## 13. The deployed artifact and the reviewed source are the same bytes
+
+The first submission was rejected for a source mismatch, and the finding was
+correct. `get_policy` on the deployed contract answered `parse_stable: false`
+for a policy nobody had checked yet, where the GitHub source answers `null` —
+the tri-state described in §5. The deployment predated that commit by one
+change, the divergence was recorded in `deployments.json` rather than fixed, and
+`tools/audit.sh` printed it on every run. A reviewer cannot be expected to
+accept a note in place of the artifact.
+
+Recording a divergence is not the same as being allowed to keep it. The rule
+this project now holds to is simpler: **what is submitted is what is on chain,
+and a byte that differs is a redeploy, not a footnote.** The earlier reasoning —
+that the deployment held sixteen decided checks bought with scarce explorer
+quota, and that the difference was a view field touching no verdict, no vector,
+no storage shape and no ABI — was all true, and none of it survives contact with
+a reviewer who has to take the claim on trust. Re-seeding cost an afternoon of
+quota; the alternative cost a submission.
+
+What makes the claim checkable rather than assertable:
+
+- `tools/verify_onchain.py <address> build/PolicyGate.min.py` reads the code
+  back with `genlayer code`, strips the CLI's chrome, and compares sha256. It
+  answers **MATCH** on the current deployment — the same
+  `e56dfc93b681611e…` the tree builds, not an equivalence under renaming.
+- `test/deploy.mjs` records the checksum of the bytes it actually sent, so
+  "the artifact differs" and "the source moved on since the deploy" stay two
+  different questions with two different answers.
+- The behaviour itself is observable on chain, not merely in the diff:
+  immediately after seeding and before any check had run, `get_policy` on all
+  five policies answered `parse_stable: null` with `parse_runs: 0`. The old
+  deployment answered `false` in that state.
+
+A rebuild does not reproduce a verdict, and it was not expected to. Fifteen
+checks were re-filed against live explorer data an afternoon later, and one of
+them changed: the note at the end of §12 is what it turned out to be.

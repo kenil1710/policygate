@@ -52,13 +52,28 @@ console.log(`\nPolicyGate resolve → ${networkName}`);
 console.log(`  contract ${address}`);
 console.log(`  signer   resolver (${c.account.address}) — no privilege, and none needed\n`);
 
+/*
+ * WHICH of them to try, and why the window ROTATES.
+ *
+ * `get_pending_checks` answers in check_id order, so a fixed window over the
+ * head of that list retries the same few checks every round and starves the
+ * rest. Measured while draining the redeploy: checks 7, 8 and 9 held a
+ * three-wide window for six consecutive rounds while check 13 - filed, valid
+ * and decidable - was never tried once. The window now advances by its own
+ * width each round, so the quota is shared across the backlog instead of being
+ * spent entirely on its lowest ids.
+ */
+let cursor = 0;
+
 for (let round = 1; round <= rounds; round++) {
   const pending = (await c.viewJson("get_pending_checks", [100])).pending ?? [];
   if (pending.length === 0) {
     console.log(`  round ${round}: nothing pending`);
     break;
   }
-  const batch = pending.slice(0, Math.max(1, perRound));
+  const width = Math.min(Math.max(1, perRound), pending.length);
+  const batch = Array.from({ length: width }, (_, i) => pending[(cursor + i) % pending.length]);
+  cursor = (cursor + width) % pending.length;
   console.log(`  round ${round}: ${pending.length} pending, trying ${batch.length}`);
   for (const p of batch) {
     const { returned } = await c.send("resolve_check", [p.check_id]);

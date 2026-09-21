@@ -216,29 +216,31 @@ contracts/PolicyGate.py     the contract, with its reasoning
 contracts/NOTES.md          hazards and decisions not recoverable from the code
 docs/PROBE.md               every measurement, with numbers
 build/PolicyGate.min.py     the deployed artifact (42 KB)
-test/test_logic.py          393 offline tests — source AND mangled artifact
+test/test_logic.py          398 offline tests — source AND mangled artifact
 test/fixtures.json          71 verbatim Blockscout bodies from four live hosts
 test/deploy.mjs             deploys the artifact, never the source
-test/seed.mjs               5 policies across 4 chains, 14 real wallets checked
+test/seed.mjs               5 policies across 4 chains, 15 checks on real wallets
 test/e2e.mjs                live integration suite
 test/resolve_pending.mjs    the operational half of the RETRY design
 test/record.mjs             writes what the chain holds into deployments.json
 tools/build.sh              minify → mangle → lint
 tools/checklist.py          79 rejection-pattern checks, decided by parsing
+tools/verify_onchain.py     reads the code back off the chain and compares sha256
 tools/audit.sh              all of the above in one command
 ```
 
 ## Running it
 
 ```bash
-bash tools/audit.sh                          # build + checklist + 393 tests + chain state
+bash tools/audit.sh                          # build + checklist + 398 tests + chain state
 
 cd test && npm install
 node accounts.mjs                            # a stable pool of signing keys
 node deploy.mjs   --network=studiodev
-node seed.mjs     --network=studiodev        # 5 policies, 14 wallets
+node seed.mjs     --network=studiodev        # 5 policies, 15 checks
 node e2e.mjs      --network=studiodev
-node resolve_pending.mjs --network=studiodev --rounds=4 --gap=300
+node resolve_pending.mjs --network=studiodev --rounds=5 --gap=1800 --max-per-round=4
+python3 tools/verify_onchain.py <address> build/PolicyGate.min.py
 node record.mjs   --network=studiodev        # snapshot the chain into deployments.json
 ```
 
@@ -252,8 +254,11 @@ way a busy gate makes progress.
 
 ## What it did on studio-dev
 
-Five policies, four chains, fifteen wallets checked — every one a real address
-with a real history, every verdict decided on numbers five validators fetched
+Contract **`0xB0F8bE23f9Ae0f53D818D0b9C68F6641c22500A4`** — running the artifact
+in this tree, verified byte for byte against the chain (see **Deployment**).
+
+Five policies, four chains, sixteen checks — every wallet a real address with a
+real history, every verdict decided on numbers five validators fetched
 separately. Full records, including each policy's exact parse and each check's
 agreed vector, are in `deployments.json`.
 
@@ -268,27 +273,53 @@ id  pol chain     wallet       verdict       met    buckets        unverifiable
  6  p1  base      0x28c6c062   GRANTED       4/4    age7 tx4 bal2  0
  7  p3  polygon   0x1f98431c   DENIED        2/4    age7 tx4 bal1  0
  8  p2  arbitrum  0x1f98431c   DENIED        2/3    age7 tx5 bal1  0
- 9  p1  base      0x42000000   GRANTED       4/4    age7 tx5 bal7  0
+ 9  p1  base      0x42000000   GRANTED       4/4    age7 tx4 bal7  0
 10  p0  ethereum  0xd8da6bf2   GRANTED       4/4    age7 tx7 bal5  0
 11  p0  ethereum  0x33015b74   DENIED        1/4    age1 tx1 bal1  0
-12  p0  ethereum  0x28c6c062   GRANTED       4/4    age7 tx6 bal7  0
+12  p0  ethereum  0x28c6c062   DENIED        3/4    age7 tx5 bal7  0
 13  p4  ethereum  0xd8da6bf2   INCONCLUSIVE  3/3    age7 tx7 bal5  2
 14  p4  ethereum  0x33015b74   DENIED        0/3    age1 tx1 bal1  2
 ```
 
+The sixteenth is the integration suite's own: `e2e.mjs` creates a policy, checks
+a wallet against it, rewrites it and then deletes it, so check 15 is recorded
+STALE against a DELETED policy. That is the pair of states that makes rewriting
+a policy mean something — the check stays readable as evidence and grants
+nothing.
+
 **Checks 13 and 14 are the pair worth reading.** Same policy — the one carrying
 a genuine off-chain clause ("must also have passed the foundation's identity
 verification… and be a resident of a jurisdiction where governance participation
-is permitted"), which both rounds counted as exactly **2** unverifiable
-requirements. vitalik.eth meets all three on-chain conditions, so the gate
-**declines to decide**. The wallet with no history provably fails all three, so
-it is **denied outright**. A proven failure outranks an unprovable requirement;
-an unprovable requirement outranks a clean sweep. That ordering is the whole of
-`_verdict_of`, and this is it running on real data.
+is permitted"), which every round on both deployments counted as exactly **2**
+unverifiable requirements. vitalik.eth meets all three on-chain conditions, so
+the gate **declines to decide**. The wallet with no history provably fails all
+three, so it is **denied outright**. A proven failure outranks an unprovable
+requirement; an unprovable requirement outranks a clean sweep. That ordering is
+the whole of `_verdict_of`, and this is it running on real data.
+
+**The same fifteen checks ran twice, two days apart, on two deployments**, and
+thirteen came back identical — same verdict, same count, same three buckets.
+Two moved, and in both the data moved rather than the gate:
+
+- **check 9** (the WETH predeploy on Base) kept GRANTED 4/4 and moved
+  `tx_count_bucket` from 5 to 4. Base's counter endpoint reports
+  `transactions_count: "0"` ([§3](docs/PROBE.md)), so the count is a lower bound
+  read off the served page — and a lower bound may prove a PASS and may never
+  prove a FAIL, which is exactly why the verdict did not move with it.
+- **check 12** (Binance 14 against *Ethereum Veteran*) went from GRANTED 4/4 to
+  DENIED 3/4. The wallet is 1,978 days old, holds 155,026 ETH and has made 742
+  transactions, so it passes those three comfortably. It failed
+  `max_failed_tx_pct` on a sample of **three** rows, all three of which had
+  failed. The page came back full and the five-minute lag window dropped 47 of
+  its 50 rows, because this wallet is busy enough that they were all younger
+  than the window. Nothing was misread — `sample_n: 3` is stored on the check —
+  and `contracts/NOTES.md` §12 carries the fix, a minimum sample size that makes
+  this INCONCLUSIVE rather than DENIED, together with why it is deliberately not
+  in this artifact.
 
 **Every policy parsed identically on every run** — `parse_changes = 0` across
-all 15 rounds — which is what the snapping ladders exist for. Their exact
-readings:
+all sixteen rounds, on both deployments — which is what the snapping ladders
+exist for. Their exact readings, unchanged between the two runs:
 
 ```
 Ethereum Veteran       wallet_age_days=365; min_tx_count=100;
@@ -304,20 +335,54 @@ Strict Council Seat    wallet_age_days=730; min_tx_count=500;
 "there is no minimum balance requirement for this gate" correctly became no
 balance condition at all rather than an unverifiable one.
 
-**49 retries across 15 checks**, and every one of them is the same story: a busy
-wallet needs the v1 first-transaction call, and that quota is scarce
-([§4](docs/PROBE.md)). All 15 settled in the end. How they were drained is
-itself a finding — see `test/resolve_pending.mjs`: retrying the whole backlog on
-a short loop spends more quota than it recovers, and resolving three at a time
-with long gaps drained everything that hammering could not.
+**32 retries across 16 checks**, every one the same story: a busy wallet needs
+the v1 first-transaction call and that quota is scarce ([§4](docs/PROBE.md)).
+All 16 settled. How they drained is itself the finding, and this run made it
+sharper than the first one did. Four checks sat PENDING through **six rounds of
+three-at-a-time with five-minute gaps — thirty retries that recovered
+nothing** — and then all four settled on the **first** attempt after the
+explorers had been left alone for about twenty minutes. The retry is the thing
+preventing the recovery.
+
+`test/resolve_pending.mjs` also grew a rotating window here, for a starvation
+this run exposed: `get_pending_checks` answers in check_id order, so a fixed
+window over the head of it retried checks 7, 8 and 9 six times each while check
+13 — filed, valid and decidable — was never tried once.
 
 ## Deployment
 
-`deployments.json` carries the current address, the artifact checksum, every
-seeded policy with its text and its parse stability, and every check with the
-seven-field vector five validators agreed on. It is written by `record.mjs`
-reading the chain back — not by whatever script last wrote to it — so it is a
-snapshot rather than a claim.
+```
+address   0xB0F8bE23f9Ae0f53D818D0b9C68F6641c22500A4   studio-dev
+artifact  build/PolicyGate.min.py   44,090 bytes   sha256 e56dfc93b681611e…
+source    contracts/PolicyGate.py   at 93ada5c9
+```
 
-`tools/audit.sh` verifies that the deployed checksum still matches what this
-tree builds, and prints the live counts beside it.
+`deployments.json` carries that address, the checksum of the bytes that actually
+went on chain, every seeded policy with its text and its parse stability, and
+every check with the seven-field vector five validators agreed on. It is written
+by `record.mjs` reading the chain back — not by whatever script last wrote to it
+— so it is a snapshot rather than a claim.
+
+**The deployed bytes are the source in this tree, and that is checkable rather
+than asserted:**
+
+```bash
+bash tools/build.sh                 # rebuild the artifact from contracts/PolicyGate.py
+python3 tools/verify_onchain.py 0xB0F8bE23f9Ae0f53D818D0b9C68F6641c22500A4 \
+                                build/PolicyGate.min.py
+# MATCH  sha256 e56dfc93b681611ec5fe43071a15c72f70feadfa7dddd75808f9a1a8a751e0ee
+```
+
+`verify_onchain.py` reads the code back with `genlayer code`, strips the CLI's
+chrome and compares sha256. It has three answers — MATCH, EQUIVALENT (the same
+token stream under a bijective renaming of private identifiers) and DIFFER — and
+this deployment is **MATCH**, not EQUIVALENT. `tools/audit.sh` prints the same
+comparison beside the live counts on every run, and distinguishes "the artifact
+differs" from "the source has moved on since this deploy", because those call
+for opposite responses.
+
+An earlier deployment (`0xCd0865Ce…`) was one commit behind on a single view
+field — `parse_stable` answering `false` where the source answers `null` for a
+policy nobody has checked yet — and was submitted that way. It is recorded under
+`supersedes` in `deployments.json`, and why keeping it was the wrong call is
+`contracts/NOTES.md` §13.
